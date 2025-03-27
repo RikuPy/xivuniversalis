@@ -13,16 +13,13 @@ class UniversalisClient:
 
     async def get_listings(
         self,
-        item_ids: int | list[int],
+        item_id: int,
         world_dc_region: str,
         *,
         listing_limit: int | None = None,
         history_limit: int = 5,
         hq_only: bool = False,
     ) -> ListingResults:
-        if isinstance(item_ids, int):
-            item_ids = [item_ids]
-
         query_params = {"entries": history_limit}
         if listing_limit is not None:
             query_params["listings"] = listing_limit
@@ -31,7 +28,8 @@ class UniversalisClient:
         query_params = urllib.parse.urlencode(query_params)
 
         listings_data = await self._request(
-            f"{self.endpoint}/{world_dc_region}/{','.join(map(str, item_ids))}?{query_params}"
+            f"{self.endpoint}/{world_dc_region}/{item_id}?{query_params}"
+            # f"{self.endpoint}/{world_dc_region}/{','.join(map(str, item_ids))}?{query_params}"
         )
 
         active = []
@@ -69,7 +67,36 @@ class UniversalisClient:
                 )
             )
 
-        return ListingResults(active=active, sale_history=sale_history)
+        return ListingResults(
+            item_id=listings_data["itemID"],
+            last_updated=datetime.fromtimestamp(listings_data["lastUploadTime"] / 1000),
+            active=active,
+            sale_history=sale_history
+        )
+
+    async def get_sale_history(self, item_id: int, world_dc_region: str, history_limit: int | None = None) -> list[SaleHistory]:
+        query_params = {}
+        if history_limit is not None:
+            query_params["entriesToReturn"] = history_limit
+        query_params = urllib.parse.urlencode(query_params)
+
+        sale_data = await self._request(f"{self.endpoint}/history/{world_dc_region}/{item_id}?{query_params}")
+
+        sale_history = []
+        for sale in sale_data["entries"]:
+            sale_history.append(
+                SaleHistory(
+                    sold_at=datetime.fromtimestamp(sale["timestamp"]),
+                    quantity=sale["quantity"],
+                    price_per_unit=sale["pricePerUnit"],
+                    total_price=sale["pricePerUnit"] * sale["quantity"],
+                    buyer_name=sale["buyerName"],
+                    world_name=sale["worldName"],
+                    world_id=sale["worldID"],
+                )
+            )
+
+        return sale_history
 
     async def get_datacenters(self) -> list[DataCenter]:
         """
