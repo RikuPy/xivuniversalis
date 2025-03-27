@@ -71,13 +71,25 @@ class UniversalisClient:
             item_id=listings_data["itemID"],
             last_updated=datetime.fromtimestamp(listings_data["lastUploadTime"] / 1000),
             active=active,
-            sale_history=sale_history
+            sale_history=sale_history,
         )
 
-    async def get_sale_history(self, item_id: int, world_dc_region: str, history_limit: int | None = None) -> list[SaleHistory]:
+    async def get_sale_history(
+        self,
+        item_id: int,
+        world_dc_region: str,
+        *,
+        history_limit: int | None = None,
+        min_sale_price: int | None = None,
+        max_sale_price: int | None = None,
+    ) -> list[SaleHistory]:
         query_params = {}
         if history_limit is not None:
             query_params["entriesToReturn"] = history_limit
+        if min_sale_price is not None:
+            query_params["minSalePrice"] = min_sale_price
+        if max_sale_price is not None:
+            query_params["maxSalePrice"] = max_sale_price
         query_params = urllib.parse.urlencode(query_params)
 
         sale_data = await self._request(f"{self.endpoint}/history/{world_dc_region}/{item_id}?{query_params}")
