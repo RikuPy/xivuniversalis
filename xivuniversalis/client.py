@@ -1,14 +1,14 @@
 import aiohttp
 
-from universalis.errors import UniversalisServerError, UniversalisError
-from universalis.models import DataCenter, World
+from xivuniversalis.errors import UniversalisServerError, UniversalisError
+from xivuniversalis.models import DataCenter, World
 
 
 class UniversalisClient:
     def __init__(self):
         self.endpoint: str = "https://universalis.app/api/v2"
 
-    async def datacenters(self) -> list[DataCenter]:
+    async def get_datacenters(self) -> list[DataCenter]:
         """
         Fetches a list of all datacenters and their worlds from Universalis.
 
@@ -44,6 +44,25 @@ class UniversalisClient:
                     break
 
         return datacenters
+
+    async def get_worlds(self) -> list[World]:
+        """
+        Fetches a list of all worlds from Universalis.
+
+        Returns:
+            list[World]: A list of World objects.
+
+        Raises:
+            UniversalisServerError: Universalis returned a server error or an invalid json response.
+            UniversalisError: Universalis returned an unexpected error.
+        """
+        world_resp = await self._request(f"{self.endpoint}/worlds")
+
+        worlds = []
+        for _world in world_resp:
+            worlds.append(World(id=_world["id"], name=_world["name"]))
+
+        return worlds
 
     async def _request(self, url: str) -> dict:
         async with aiohttp.request("GET", url) as response:
