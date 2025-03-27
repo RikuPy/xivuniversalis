@@ -9,6 +9,10 @@ from xivuniversalis.client import UniversalisClient
 async def test_item_listings():
     client = UniversalisClient()
     listings = await client.get_listings(7, "Crystal", listing_limit=50, history_limit=5)
+    assert listings.item_id == 7
+    assert listings.last_updated
+    assert isinstance(listings.last_updated, datetime)
+
     for listing in listings.active:
         assert listing.updated_at
         assert isinstance(listing.updated_at, datetime)

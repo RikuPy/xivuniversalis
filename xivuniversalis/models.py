@@ -94,5 +94,7 @@ class SaleHistory:
 
 @dataclass(kw_only=True, slots=True)
 class ListingResults:
+    item_id: int
+    last_updated: datetime
     active: list[Listing]
     sale_history: list[SaleHistory]
