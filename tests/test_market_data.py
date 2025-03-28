@@ -53,9 +53,9 @@ async def test_multiple_market_data():
     client = UniversalisClient()
     market_data = await client.get_market_data([4, 7], "mateus")
 
-    assert isinstance(market_data, list)
+    assert isinstance(market_data, dict)
     assert len(market_data) == 2
-    assert market_data[0].item_id == 4
-    assert market_data[1].item_id == 7
+    assert market_data[4].item_id == 4
+    assert market_data[7].item_id == 7
 
 

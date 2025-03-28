@@ -56,7 +56,7 @@ class UniversalisClient:
         listing_limit: int | None = None,
         history_limit: int = 5,
         hq_only: bool = False,
-    ) -> ListingResults | list[ListingResults]:
+    ) -> ListingResults | dict[int, ListingResults]:
         query_params = {"entries": history_limit}
         if listing_limit is not None:
             query_params["listings"] = listing_limit
@@ -65,7 +65,7 @@ class UniversalisClient:
         query_params = urllib.parse.urlencode(query_params)
 
         # If we have a single item ID, we need to wrap it in a list
-        results = []
+        results = {}
         item_ids = item_ids if isinstance(item_ids, list) else [item_ids]
         resp = await self._request(f"{self.endpoint}/{world_dc_region}/{','.join(map(str, item_ids))}?{query_params}")
 
@@ -107,13 +107,11 @@ class UniversalisClient:
                     )
                 )
 
-            results.append(
-                ListingResults(
-                    item_id=item["itemID"],
-                    last_updated=datetime.fromtimestamp(item["lastUploadTime"] / 1000),
-                    active=active,
-                    sale_history=sale_history,
-                )
+            results[item["itemID"]] = ListingResults(
+                item_id=item["itemID"],
+                last_updated=datetime.fromtimestamp(item["lastUploadTime"] / 1000),
+                active=active,
+                sale_history=sale_history,
             )
 
         return results
@@ -182,7 +180,9 @@ class UniversalisClient:
         # If we have a single item ID, we need to wrap it in a list
         results = {}
         item_ids = item_ids if isinstance(item_ids, list) else [item_ids]
-        resp = await self._request(f"{self.endpoint}/history/{world_dc_region}/{','.join(map(str, item_ids))}?{query_params}")
+        resp = await self._request(
+            f"{self.endpoint}/history/{world_dc_region}/{','.join(map(str, item_ids))}?{query_params}"
+        )
 
         items = resp["items"].values() if "items" in resp else [resp]
         for item in items:
@@ -208,12 +208,12 @@ class UniversalisClient:
     async def get_market_data(self, item_ids: int, world_dc_region: str) -> MarketDataResults: ...
 
     @overload
-    async def get_market_data(self, item_ids: list[int], world_dc_region: str) -> list[MarketDataResults]: ...
+    async def get_market_data(self, item_ids: list[int], world_dc_region: str) -> dict[int, MarketDataResults]: ...
 
     @supports_multiple_ids
     async def get_market_data(
         self, item_ids: int | list[int], world_dc_region: str
-    ) -> MarketDataResults | list[MarketDataResults]:
+    ) -> MarketDataResults | dict[int, MarketDataResults]:
         """
         Fetches market data for a given item ID or list of items ID's.
         Returns data on the lowest price, average sale price, last sale, and sale volume.
@@ -225,19 +225,19 @@ class UniversalisClient:
             world_dc_region (str): The world, datacenter, or region to filter the results by.
         """
         # If we have a single item ID, we need to wrap it in a list
-        results = []
+        results = {}
         item_ids = item_ids if isinstance(item_ids, list) else [item_ids]
         resp = await self._request(f"{self.endpoint}/aggregated/{world_dc_region}/{','.join(map(str, item_ids))}")
 
         # Iterate through the results
-        for _result in resp["results"]:
+        for result in resp["results"]:
             market_data = {}
             # Iterate through both HQ and NQ results
-            for _type in ["hq", "nq"]:
-                field = _result[_type]["minListing"]
+            for type_ in ["hq", "nq"]:
+                field = result[type_]["minListing"]
                 # Items that cannot be HQ have no results
                 if not field:
-                    market_data[_type] = None
+                    market_data[type_] = None
                     continue
                 lowest_price = LowestPrice(
                     by_world=field["world"]["price"] if "world" in field else None,
@@ -247,14 +247,14 @@ class UniversalisClient:
                     region_world_id=field["region"]["worldId"],
                 )
 
-                field = _result[_type]["averageSalePrice"]
+                field = result[type_]["averageSalePrice"]
                 average_price = AverageSalePrice(
                     by_world=field["world"]["price"] if "world" in field else None,
                     by_dc=field["dc"]["price"] if "dc" in field else None,
                     by_region=field["region"]["price"],
                 )
 
-                field = _result[_type]["recentPurchase"]
+                field = result[type_]["recentPurchase"]
                 last_sale = LastSale(
                     world_price=field["world"]["price"] if "world" in field else None,
                     world_sold_at=datetime.fromtimestamp(field["world"]["timestamp"] / 1000)
@@ -268,21 +268,23 @@ class UniversalisClient:
                     region_world_id=field["region"]["worldId"],
                 )
 
-                field = _result[_type]["dailySaleVelocity"]
+                field = result[type_]["dailySaleVelocity"]
                 sale_count = SaleVolume(
                     by_world=field["world"]["quantity"] if "world" in field else None,
                     by_dc=field["dc"]["quantity"] if "dc" in field else None,
                     by_region=field["region"]["quantity"],
                 )
 
-                market_data[_type] = MarketData(
+                market_data[type_] = MarketData(
                     lowest_price=lowest_price,
                     average_price=average_price,
                     last_sale=last_sale,
                     sale_volume=sale_count,
                 )
 
-            results.append(MarketDataResults(item_id=_result["itemId"], hq=market_data["hq"], nq=market_data["nq"]))
+            results[result["itemId"]] = MarketDataResults(
+                item_id=result["itemId"], hq=market_data["hq"], nq=market_data["nq"]
+            )
 
         return results
 

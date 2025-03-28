@@ -49,5 +49,5 @@ async def test_multiple_item_listings():
     client = UniversalisClient()
     listings = await client.get_listings([4,7], "Crystal", listing_limit=10)
     assert len(listings) == 2
-    assert listings[0].item_id == 4
-    assert listings[1].item_id == 7
+    assert listings[4].item_id == 4
+    assert listings[7].item_id == 7
