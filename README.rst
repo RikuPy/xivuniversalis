@@ -43,7 +43,7 @@ You can also use the ``UniversalisClient.get_market_data`` method to find the ch
 
     client = UniversalisClient()
     market_data = asyncio.run(client.get_market_data(12056, "north-america"))
-    print(f"[{market_data.nq.lowest_price.dc_world_id}] Found listing for {market_data.nq.lowest_price.by_dc} gil")
+    print(f"[{market_data.nq.lowest_price.region_world_id}] Found listing for {market_data.nq.lowest_price.by_region} gil")
     print(f"Average listing price is {market_data.nq.average_price.by_region} gil")
 
 You may have noticed above that we are referencing a world ID instead of a world name in the above example.
@@ -59,4 +59,8 @@ For endpoints where world names are not available, you can use the libraries ``U
     worlds = asyncio.run(client.get_worlds())
     world_id = 37
     print(worlds[world_id].name)
+
+Links
+=====
+* `Documentation <https://xivuniversalis.readthedocs.io/en/latest/>`__
 

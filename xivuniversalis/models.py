@@ -54,7 +54,7 @@ class World:
         id (int): The world's unique ID.
         name (str): The world's name.
         datacenter (DataCenter | None): The world's datacenter.
-            Only provided when worlds are retrieved via the `UniversalisClient.datacenters` method.
+            Only provided when worlds are retrieved via the :meth:`~xivuniversalis.client.UniversalisClient.get_datacenters` method.
     """
 
     id: int
@@ -126,7 +126,7 @@ class Listing(ListingMeta):
 @dataclass(kw_only=True, slots=True)
 class SaleHistory:
     """
-    Represents an items sale history.
+    Represents an item's sale history.
 
     Attributes:
         item_id (int): The item's unique ID.
@@ -172,8 +172,8 @@ class LowestPrice:
 
     Attributes:
         by_world (int | None): The lowest price for a specified world. Only available if a world filter was specified.
-        by_dc (int | None): The lowest price for a specified datacenter. Only available if a datacenter filter was specified.
-        dc_world_id (int | None): The ID of the world where the lowest listing price was found. Only available if a datacenter filter was specified.
+        by_dc (int | None): The lowest price for a specified datacenter. Only available if a world or datacenter filter was specified.
+        dc_world_id (int | None): The ID of the world where the lowest listing price was found. Only available if a world or datacenter filter was specified.
         by_region (int): The lowest price for the entire region.
         region_world_id (int): The ID of the world where the lowest listing price in the region was found.
     """
@@ -191,7 +191,7 @@ class AverageSalePrice:
 
     Attributes:
         by_world (float | None): The average sale price for a specified world. Only available if a world filter was specified.
-        by_dc (float | None): The average sale price for a specified datacenter. Only available if a datacenter filter was specified.
+        by_dc (float | None): The average sale price for a specified datacenter. Only available if a world or datacenter filter was specified.
         by_region (float): The average sale price for the entire region.
     """
     by_world: float | None
@@ -207,9 +207,9 @@ class LastSale:
     Attributes:
         world_price (int | None): The price of the last sale in a specified world. Only available if a world filter was specified.
         world_sold_at (datetime | None): The date and time of the last sale in a specified world. Only available if a world filter was specified.
-        dc_price (int | None): The price of the last sale in a specified datacenter. Only available if a datacenter filter was specified.
-        dc_sold_at (datetime | None): The date and time of the last sale in a specified datacenter. Only available if a datacenter filter was specified.
-        dc_world_id (int | None): The ID of the world where the last sale was made in a specified datacenter. Only available if a datacenter filter was specified.
+        dc_price (int | None): The price of the last sale in a specified datacenter. Only available if a world or datacenter filter was specified.
+        dc_sold_at (datetime | None): The date and time of the last sale in a specified datacenter. Only available if a world or datacenter filter was specified.
+        dc_world_id (int | None): The ID of the world where the last sale was made in a specified datacenter. Only available if a world or datacenter filter was specified.
         region_price (int): The price of the last sale in the region.
         region_sold_at (datetime): The date and time of the last sale in the region.
         region_world_id (int): The ID of the world where the last sale was made in the region.
@@ -231,7 +231,7 @@ class SaleVolume:
 
     Attributes:
         by_world (float | None): The sale volume for a specified world. Only available if a world filter was specified.
-        by_dc (float | None): The sale volume for a specified datacenter. Only available if a datacenter filter was specified.
+        by_dc (float | None): The sale volume for a specified datacenter. Only available if a world or datacenter filter was specified.
         by_region (float): The sale volume for the entire region.
     """
     by_world: float | None

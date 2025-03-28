@@ -6,9 +6,25 @@ name = "xivuniversalis"
 version = "0.1.0a1"
 description = "An unofficial asynchronous Python library for the Universalis API."
 requires-python = ">=3.11"
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Topic :: Games/Entertainment",
+    "Topic :: Software Development :: Libraries",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Intended Audience :: Developers",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "License :: OSI Approved :: MIT License"
+]
 dependencies = [
     "aiohttp>=3.11.14",
 ]
+
+[project.urls]
+Homepage = "https://github.com/RikuPy/xivuniversalis"
+Issues = "https://github.com/RikuPy/xivuniversalis/issues"
 
 [dependency-groups]
 dev = [
@@ -17,3 +33,7 @@ dev = [
     "sphinx>=8.2.3",
     "sphinx-rtd-theme>=3.0.2",
 ]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
