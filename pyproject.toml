@@ -28,10 +28,12 @@ Issues = "https://github.com/RikuPy/xivuniversalis/issues"
 
 [dependency-groups]
 dev = [
+    "build>=1.2.2.post1",
     "pytest>=8.3.5",
     "pytest-asyncio>=0.26.0",
     "sphinx>=8.2.3",
     "sphinx-rtd-theme>=3.0.2",
+    "twine>=6.1.0",
 ]
 
 [build-system]
