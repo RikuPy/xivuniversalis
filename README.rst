@@ -17,7 +17,7 @@ You can install this library using pip:
 
 Usage
 =====
-A common use-case for the universalis API is to look up listings for an item. This can be done with the ``UniversalisClient.get_listings`` method,
+A common use case for the Universalis API is looking up item listings. This can be done with the ``UniversalisClient.get_listings`` method,
 
 .. code:: python
 
@@ -34,7 +34,7 @@ You must have the item ID's for the items you wish to look up.
 
 If you need a source to obtain these from, you can use a service such as `xivapi <https://v2.xivapi.com/>`__.
 
-You can also use the ``UniversalisClient.get_market_data`` method to find the cheapest listing for an item, as well as the average price and other useful metrics.
+You can also use the ``UniversalisClient.get_market_data`` method to find an item's cheapest listing, average price, and other useful metrics.
 
 .. code:: python
 
@@ -46,9 +46,9 @@ You can also use the ``UniversalisClient.get_market_data`` method to find the ch
     print(f"[{market_data.nq.lowest_price.region_world_id}] Found listing for {market_data.nq.lowest_price.by_region} gil")
     print(f"Average listing price is {market_data.nq.average_price.by_region} gil")
 
-You may have noticed above that we are referencing a world ID instead of a world name in the above example.
+You may have noticed above that we are referencing a world ID instead of a world name.
 
-For endpoints where world names are not available, you can use the libraries ``UniversalisClient.get_worlds`` method to build a dictionary mapping that will allow you to easily convert world ID's back into human readable world names.
+For endpoints where world names are not available, you can use the libraries ``UniversalisClient.get_worlds`` method to build a dictionary mapping that will allow you to easily convert world ID's back into human-readable world names.
 
 .. code:: python
 
@@ -63,4 +63,3 @@ For endpoints where world names are not available, you can use the libraries ``U
 Links
 =====
 * `Documentation <https://xivuniversalis.readthedocs.io/en/latest/>`__
-
