@@ -8,7 +8,7 @@ from xivuniversalis.client import UniversalisClient
 @pytest.mark.asyncio
 async def test_sale_history():
     client = UniversalisClient()
-    sale_history = await client.get_sale_history(7, "Crystal", history_limit=25)
+    sale_history = await client.get_sale_history(7, "Crystal", limit=25)
 
     for sale in sale_history:
         assert sale.buyer_name

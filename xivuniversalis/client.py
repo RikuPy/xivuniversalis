@@ -33,7 +33,7 @@ class UniversalisClient:
         world_dc_region: str,
         *,
         listing_limit: int | None = None,
-        history_limit: int = 5,
+        history_limit: int | None = None,
         hq_only: bool = False,
     ) -> ListingResults: ...
 
@@ -44,7 +44,7 @@ class UniversalisClient:
         world_dc_region: str,
         *,
         listing_limit: int | None = None,
-        history_limit: int = 5,
+        history_limit: int | None = None,
         hq_only: bool = False,
     ) -> list[ListingResults]: ...
 
@@ -55,15 +55,34 @@ class UniversalisClient:
         world_dc_region: str,
         *,
         listing_limit: int | None = None,
-        history_limit: int = 5,
+        history_limit: int | None = None,
         hq_only: bool = False,
     ) -> ListingResults | dict[int, ListingResults]:
-        query_params = {"entries": history_limit}
+        """
+        Fetches the listings for a given item ID or list of items ID's.
+
+        Args:
+            item_ids (int | list[int]): The item ID or list of item IDs to fetch listings for.
+            world_dc_region (str): The world, datacenter, or region to filter the results by.
+            listing_limit (int | None): The maximum number of listings to return. If not provided, Universalis will
+                return all available listings.
+            history_limit (int): The maximum number of sale history entries to return. If not provided, Universalis will
+                default to 5 entries.
+            hq_only (bool): If True, only HQ items will be returned.
+
+        Returns:
+            ListingResults | dict[int, ListingResults]: A ListingResults object if a single item ID was provided,
+                or a dictionary containing item ID's as keys and ListingResults objects as values if a list of item IDs
+                was provided.
+        """
+        params = {}
+        if history_limit:
+            params["entries"] = history_limit
         if listing_limit is not None:
-            query_params["listings"] = listing_limit
+            params["listings"] = listing_limit
         if hq_only:
-            query_params["hq"] = 1
-        query_params = urllib.parse.urlencode(query_params)
+            params["hq"] = 1
+        query_params = urllib.parse.urlencode(params)
 
         # If we have a single item ID, we need to wrap it in a list
         item_ids = item_ids if isinstance(item_ids, list) else [item_ids]
@@ -124,7 +143,7 @@ class UniversalisClient:
         item_ids: int,
         world_dc_region: str,
         *,
-        history_limit: int | None = None,
+        limit: int | None = None,
         min_sale_price: int | None = None,
         max_sale_price: int | None = None,
     ) -> list[SaleHistory]: ...
@@ -135,7 +154,7 @@ class UniversalisClient:
         item_ids: list[int],
         world_dc_region: str,
         *,
-        history_limit: int | None = None,
+        limit: int | None = None,
         min_sale_price: int | None = None,
         max_sale_price: int | None = None,
     ) -> dict[int, list[SaleHistory]]: ...
@@ -146,21 +165,17 @@ class UniversalisClient:
         item_ids: int | list[int],
         world_dc_region: str,
         *,
-        history_limit: int | None = None,
+        limit: int | None = None,
         min_sale_price: int | None = None,
         max_sale_price: int | None = None,
     ) -> list[SaleHistory] | dict[int, list[SaleHistory]]:
         """
         Fetches the sale history for a given item ID or list of items ID's.
-        Returns a list of SaleHistory objects, which contain information about the sale, including the date sold,
-        quantity sold, price per unit, total price, buyer name, world name, and world ID.
-        If a list of item IDs is provided, a dictionary containing item ID's as keys and lists of SaleHistory objects
-        as values will be returned.
 
         Args:
             item_ids (int | list[int]): The item ID or list of item IDs to fetch sale history for.
             world_dc_region (str): The world, datacenter, or region to filter the results by.
-            history_limit (int | None): The maximum number of sale history entries to return. If not provided,
+            limit (int | None): The maximum number of sale history entries to return. If not provided,
                 Universalis will default to 1800 results.
             min_sale_price (int | None): The minimum sale price to filter the results by.
             max_sale_price (int | None): The maximum sale price to filter the results by.
@@ -170,14 +185,14 @@ class UniversalisClient:
                 provided, or a dictionary containing item ID's as keys and lists of SaleHistory objects as values if
                 a list of item IDs was provided.
         """
-        query_params = {}
-        if history_limit is not None:
-            query_params["entriesToReturn"] = history_limit
+        params = {}
+        if limit is not None:
+            params["entriesToReturn"] = limit
         if min_sale_price is not None:
-            query_params["minSalePrice"] = min_sale_price
+            params["minSalePrice"] = min_sale_price
         if max_sale_price is not None:
-            query_params["maxSalePrice"] = max_sale_price
-        query_params = urllib.parse.urlencode(query_params)
+            params["maxSalePrice"] = max_sale_price
+        query_params = urllib.parse.urlencode(params)
 
         # If we have a single item ID, we need to wrap it in a list
         item_ids = item_ids if isinstance(item_ids, list) else [item_ids]
@@ -223,8 +238,13 @@ class UniversalisClient:
         for the datacenter and region. Similarly, if filtered by datacenter, you will receive data for the region as well.
 
         Args:
-            item_ids (int | list[int]): The item ID or list of item IDs to fetch market data for.
+            item_ids (int | list[int]): The item ID or list of up to 100 item IDs to fetch market data for.
             world_dc_region (str): The world, datacenter, or region to filter the results by.
+
+        Returns:
+            MarketDataResults | dict[int, MarketDataResults]: A MarketDataResults object if a single item ID was
+                provided, or a dictionary containing item ID's as keys and MarketDataResults objects as values if
+                a list of item IDs was provided.
         """
         # If we have a single item ID, we need to wrap it in a list
         item_ids = item_ids if isinstance(item_ids, list) else [item_ids]
@@ -290,12 +310,14 @@ class UniversalisClient:
 
         return results
 
-    async def get_recently_updated(self, world_dc_region: str) -> list[ListingMeta]:
+    async def get_recently_updated(self, world_dc_region: str, limit: int = None) -> list[ListingMeta]:
         """
         Fetches a list of recently updated items.
 
         Args:
             world_dc_region (str): The world, datacenter, or region to filter the results by.
+            limit (int | None): The maximum number of results to return. Supports a maximum of 200. If not provided,
+                Universalis will default to 50.
 
         Returns:
             list[ListingMeta]: A list of ListingMeta objects containing item ID, last upload time, world ID, and world name.
@@ -306,7 +328,10 @@ class UniversalisClient:
         """
         # Technically this endpoint has a split "world" and "dcName" parameter, but the API appears
         # to accept a world, dc, or even region in the world parameter without issue.
-        query_params = urllib.parse.urlencode({"world": world_dc_region})
+        params = {"world": world_dc_region}
+        if limit is not None:
+            params["limit"] = limit
+        query_params = urllib.parse.urlencode(params)
         resp = await self._request(f"{self.endpoint}/extra/stats/most-recently-updated?{query_params}")
         results = []
         for item in resp["items"]:
