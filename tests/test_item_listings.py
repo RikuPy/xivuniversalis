@@ -12,7 +12,7 @@ async def test_item_listings():
     assert listings.item_id == 4
     assert listings.last_updated
     assert isinstance(listings.last_updated, datetime)
-    for listing in listings.active:
+    for listing in listings.active_listings:
         assert listing.updated_at
         assert isinstance(listing.updated_at, datetime)
         assert listing.hq is False
@@ -31,7 +31,7 @@ async def test_item_listings():
         assert isinstance(listing.world_id, int)
         assert listing.world_name
 
-    assert len(listings.active) <= 50
+    assert len(listings.active_listings) <= 50
 
     for sale in listings.sale_history:
         assert sale.buyer_name

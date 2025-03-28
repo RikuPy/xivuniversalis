@@ -12,7 +12,7 @@ async def test_datacenters():
         assert datacenter.region
         assert datacenter.worlds
         assert len(datacenter.worlds) > 0
-        for world in datacenter.worlds:
+        for world_id, world in datacenter.worlds.items():
             assert world.id
             assert world.name
             assert world.datacenter == datacenter

@@ -1,5 +1,7 @@
 from functools import wraps
 
+__all__ = ["supports_multiple_ids"]
+
 
 def supports_multiple_ids(func):
     @wraps(func)

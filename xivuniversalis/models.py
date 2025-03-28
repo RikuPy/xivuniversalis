@@ -1,6 +1,21 @@
 from dataclasses import dataclass
 from datetime import datetime
 
+__all__ = [
+    "DataCenter",
+    "World",
+    "ListingMeta",
+    "Listing",
+    "SaleHistory",
+    "ListingResults",
+    "LowestPrice",
+    "AverageSalePrice",
+    "LastSale",
+    "SaleVolume",
+    "MarketData",
+    "MarketDataResults",
+]
+
 
 @dataclass(kw_only=True)
 class DataCenter:
@@ -15,7 +30,7 @@ class DataCenter:
 
     name: str
     region: str
-    worlds: list["World"]
+    worlds: dict[int, "World"]
 
     def __eq__(self, other):
         if isinstance(other, DataCenter):
@@ -101,7 +116,7 @@ class SaleHistory:
 class ListingResults:
     item_id: int
     last_updated: datetime
-    active: list[Listing]
+    active_listings: list[Listing]
     sale_history: list[SaleHistory]
 
 
@@ -153,4 +168,3 @@ class MarketDataResults:
     item_id: int
     nq: MarketData
     hq: MarketData | None
-

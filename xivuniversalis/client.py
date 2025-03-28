@@ -5,7 +5,7 @@ from typing import overload
 import aiohttp
 
 from xivuniversalis.decorators import supports_multiple_ids
-from xivuniversalis.errors import UniversalisServerError, UniversalisError
+from xivuniversalis.errors import InvalidWorldError, InvalidParametersError, UniversalisServerError
 from xivuniversalis.models import (
     DataCenter,
     World,
@@ -21,8 +21,26 @@ from xivuniversalis.models import (
     ListingMeta,
 )
 
+__all__ = ["UniversalisClient"]
+
 
 class UniversalisClient:
+    """
+    An asynchronous client for the Universalis REST API.
+
+    Example:
+        .. code:: python
+
+            import asyncio
+            from xivuniversalis import UniversalisClient
+
+            client = UniversalisClient()
+            results = asyncio.run(client.get_listings(4, "mateus"))
+            print(f"Found {len(results)} listings")
+            for listing in results:
+                print(f"[{listing.world_name}] {listing.quantity}x{listing.price_per_unit}/each ({listing.total_price} gil)")
+    """
+
     def __init__(self):
         self.endpoint: str = "https://universalis.app/api/v2"
 
@@ -78,6 +96,11 @@ class UniversalisClient:
             ListingResults | dict[int, ListingResults]: A ListingResults object if a single item ID was provided,
                 or a dictionary containing item ID's as keys and ListingResults objects as values if a list of item IDs
                 was provided.
+
+        Raises:
+            InvalidWorldError: The specified world, datacenter, or region does not exist.
+            InvalidParametersError: An invalid parameter was passed to the API.
+            UniversalisServerError: Universalis returned a server error or an invalid json response.
         """
         params = {}
         if history_limit:
@@ -137,7 +160,7 @@ class UniversalisClient:
             results[item["itemID"]] = ListingResults(
                 item_id=item["itemID"],
                 last_updated=datetime.fromtimestamp(item["lastUploadTime"] / 1000),
-                active=active,
+                active_listings=active,
                 sale_history=sale_history,
             )
 
@@ -200,6 +223,11 @@ class UniversalisClient:
             list[SaleHistory] | dict[int, list[SaleHistory]]: A list of SaleHistory objects if a single item ID was
                 provided, or a dictionary containing item ID's as keys and lists of SaleHistory objects as values if
                 a list of item IDs was provided.
+
+        Raises:
+            InvalidWorldError: The specified world, datacenter, or region does not exist.
+            InvalidParametersError: An invalid parameter was passed to the API.
+            UniversalisServerError: Universalis returned a server error or an invalid json response.
         """
         params = {}
         if limit is not None:
@@ -265,6 +293,11 @@ class UniversalisClient:
             MarketDataResults | dict[int, MarketDataResults]: A MarketDataResults object if a single item ID was
                 provided, or a dictionary containing item ID's as keys and MarketDataResults objects as values if
                 a list of item IDs was provided.
+
+        Raises:
+            InvalidWorldError: The specified world, datacenter, or region does not exist.
+            InvalidParametersError: An invalid parameter was passed to the API.
+            UniversalisServerError: Universalis returned a server error or an invalid json response.
         """
         # If we have a single item ID, we need to wrap it in a list
         item_ids = item_ids if isinstance(item_ids, list) else [item_ids]
@@ -343,8 +376,9 @@ class UniversalisClient:
             list[ListingMeta]: A list of ListingMeta objects containing item ID, last upload time, world ID, and world name.
 
         Raises:
+            InvalidServerError: The specified world, datacenter, or region does not exist.
+            InvalidParametersError: An invalid parameter was passed to the API.
             UniversalisServerError: Universalis returned a server error or an invalid json response.
-            UniversalisError: Universalis returned an unexpected error.
         """
         # Technically this endpoint has a split "world" and "dcName" parameter, but the API appears
         # to accept a world, dc, or even region in the world parameter without issue.
@@ -355,12 +389,14 @@ class UniversalisClient:
         resp = await self._request(f"{self.endpoint}/extra/stats/most-recently-updated?{query_params}")
         results = []
         for item in resp["items"]:
-            results.append(ListingMeta(
-                item_id=item["itemID"],
-                updated_at=datetime.fromtimestamp(item["lastUploadTime"] / 1000),
-                world_id=item["worldID"],
-                world_name=item["worldName"],
-            ))
+            results.append(
+                ListingMeta(
+                    item_id=item["itemID"],
+                    updated_at=datetime.fromtimestamp(item["lastUploadTime"] / 1000),
+                    world_id=item["worldID"],
+                    world_name=item["worldName"],
+                )
+            )
 
         return results
 
@@ -375,8 +411,8 @@ class UniversalisClient:
             dict[str, int]: A dictionary containing cities as keys and their associated tax rates as values.
 
         Raises:
+            InvalidServerError: The specified world, datacenter, or region does not exist.
             UniversalisServerError: Universalis returned a server error or an invalid json response.
-            UniversalisError: Universalis returned an unexpected error.
         """
         query_params = urllib.parse.urlencode({"world": world})
         return await self._request(f"{self.endpoint}/tax-rates?{query_params}")
@@ -392,7 +428,6 @@ class UniversalisClient:
 
         Raises:
             UniversalisServerError: Universalis returned a server error or an invalid json response.
-            UniversalisError: Universalis returned an unexpected error.
         """
         dc_resp = await self._request(f"{self.endpoint}/data-centers")
         world_resp = await self._request(f"{self.endpoint}/worlds")
@@ -406,34 +441,33 @@ class UniversalisClient:
         # Build our DataCenter objects
         datacenters = []
         for _datacenter in dc_resp:
-            dc_worlds = [worlds[world_id] for world_id in _datacenter["worlds"] if world_id in worlds]
+            dc_worlds = {world_id: worlds[world_id] for world_id in _datacenter["worlds"] if world_id in worlds}
             datacenters.append(DataCenter(name=_datacenter["name"], region=_datacenter["region"], worlds=dc_worlds))
 
         # Update worlds with their associated datacenters
         for _world in worlds.values():
             for _datacenter in datacenters:
-                if _world in _datacenter.worlds:
+                if _world.id in _datacenter.worlds:
                     _world.datacenter = _datacenter
                     break
 
         return datacenters
 
-    async def get_worlds(self) -> list[World]:
+    async def get_worlds(self) -> dict[int, World]:
         """
-        Fetches a list of all worlds from Universalis.
+        Fetches a dictionary of worlds from Universalis.
 
         Returns:
-            list[World]: A list of World objects.
+            dict[int, World]: A dictionary containing world IDs as keys and World objects as values.
 
         Raises:
             UniversalisServerError: Universalis returned a server error or an invalid json response.
-            UniversalisError: Universalis returned an unexpected error.
         """
         world_resp = await self._request(f"{self.endpoint}/worlds")
 
-        worlds = []
+        worlds = {}
         for _world in world_resp:
-            worlds.append(World(id=_world["id"], name=_world["name"]))
+            worlds[_world["id"]] = World(id=_world["id"], name=_world["name"])
 
         return worlds
 
@@ -446,7 +480,6 @@ class UniversalisClient:
 
         Raises:
             UniversalisServerError: Universalis returned a server error or an invalid json response.
-            UniversalisError: Universalis returned an unexpected error.
         """
         return await self._request(f"{self.endpoint}/marketable")
 
@@ -456,9 +489,13 @@ class UniversalisClient:
                 match response.status:
                     case 200:
                         return await response.json()
+                    case 400:
+                        raise InvalidParametersError("An invalid parameter was passed to the API.")
+                    case 404:
+                        raise InvalidWorldError("The specified world, datacenter, or region does not exist.")
                     case 500:
-                        raise UniversalisServerError("Universalis returned a server error.")
+                        raise UniversalisServerError("Universalis returned an internal server error.")
                     case _:
-                        raise UniversalisError(f"Universalis returned an unexpected {response.status} error.")
+                        raise UniversalisServerError(f"Universalis returned an unexpected {response.status} error.")
             except aiohttp.ContentTypeError:
                 raise UniversalisServerError("Universalis returned an invalid json response.")

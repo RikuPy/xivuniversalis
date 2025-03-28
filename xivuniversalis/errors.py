@@ -1,8 +1,25 @@
+__all__ = ["UniversalisError", "InvalidWorldError", "InvalidParametersError", "UniversalisServerError"]
+
+
 class UniversalisError(Exception):
     """Base class for all Universalis exceptions."""
+
+    ...
+
+
+class InvalidWorldError(UniversalisError):
+    """Exception raised when an invalid world, datacenter or region is provided to the API."""
+
+    ...
+
+
+class InvalidParametersError(UniversalisError):
+    """Exception raised when an invalid parameter is provided to the API."""
+
     ...
 
 
 class UniversalisServerError(UniversalisError):
-    """Exception raised when Universalis returns a server error or an invalid json response."""
+    """Exception raised when Universalis returns an internal server error."""
+
     ...
