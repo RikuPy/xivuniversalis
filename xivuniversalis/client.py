@@ -255,6 +255,7 @@ class UniversalisClient:
             for sale in item["entries"]:
                 sale_history.append(
                     SaleHistory(
+                        item_id=item["itemID"],
                         sold_at=datetime.fromtimestamp(sale["timestamp"]),
                         quantity=sale["quantity"],
                         price_per_unit=sale["pricePerUnit"],
