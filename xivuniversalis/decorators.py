@@ -6,6 +6,10 @@ def supports_multiple_ids(func):
     async def wrapper(*args, **kwargs):
         result = await func(*args, **kwargs)
         if len(result) == 1:
+            if isinstance(result, dict):
+                key = next(iter(result))
+                return result[key]
+
             return result[0]
         return result
 

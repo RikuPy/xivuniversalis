@@ -30,6 +30,7 @@ class UniversalisClient:
         self,
         item_ids: int,
         world_dc_region: str,
+        *,
         listing_limit: int | None = None,
         history_limit: int = 5,
         hq_only: bool = False,
@@ -40,6 +41,7 @@ class UniversalisClient:
         self,
         item_ids: list[int],
         world_dc_region: str,
+        *,
         listing_limit: int | None = None,
         history_limit: int = 5,
         hq_only: bool = False,
@@ -116,15 +118,58 @@ class UniversalisClient:
 
         return results
 
+    @overload
     async def get_sale_history(
         self,
-        item_id: int,
+        item_ids: int,
         world_dc_region: str,
         *,
         history_limit: int | None = None,
         min_sale_price: int | None = None,
         max_sale_price: int | None = None,
-    ) -> list[SaleHistory]:
+    ) -> list[SaleHistory]: ...
+
+    @overload
+    async def get_sale_history(
+        self,
+        item_ids: list[int],
+        world_dc_region: str,
+        *,
+        history_limit: int | None = None,
+        min_sale_price: int | None = None,
+        max_sale_price: int | None = None,
+    ) -> dict[int, list[SaleHistory]]: ...
+
+    @supports_multiple_ids
+    async def get_sale_history(
+        self,
+        item_ids: int | list[int],
+        world_dc_region: str,
+        *,
+        history_limit: int | None = None,
+        min_sale_price: int | None = None,
+        max_sale_price: int | None = None,
+    ) -> list[SaleHistory] | dict[int, list[SaleHistory]]:
+        """
+        Fetches the sale history for a given item ID or list of items ID's.
+        Returns a list of SaleHistory objects, which contain information about the sale, including the date sold,
+        quantity sold, price per unit, total price, buyer name, world name, and world ID.
+        If a list of item IDs is provided, a dictionary containing item ID's as keys and lists of SaleHistory objects
+        as values will be returned.
+
+        Args:
+            item_ids (int | list[int]): The item ID or list of item IDs to fetch sale history for.
+            world_dc_region (str): The world, datacenter, or region to filter the results by.
+            history_limit (int | None): The maximum number of sale history entries to return. If not provided,
+                Universalis will default to 1800 results.
+            min_sale_price (int | None): The minimum sale price to filter the results by.
+            max_sale_price (int | None): The maximum sale price to filter the results by.
+
+        Returns:
+            list[SaleHistory] | dict[int, list[SaleHistory]]: A list of SaleHistory objects if a single item ID was
+                provided, or a dictionary containing item ID's as keys and lists of SaleHistory objects as values if
+                a list of item IDs was provided.
+        """
         query_params = {}
         if history_limit is not None:
             query_params["entriesToReturn"] = history_limit
@@ -134,23 +179,30 @@ class UniversalisClient:
             query_params["maxSalePrice"] = max_sale_price
         query_params = urllib.parse.urlencode(query_params)
 
-        sale_data = await self._request(f"{self.endpoint}/history/{world_dc_region}/{item_id}?{query_params}")
+        # If we have a single item ID, we need to wrap it in a list
+        results = {}
+        item_ids = item_ids if isinstance(item_ids, list) else [item_ids]
+        resp = await self._request(f"{self.endpoint}/history/{world_dc_region}/{','.join(map(str, item_ids))}?{query_params}")
 
-        sale_history = []
-        for sale in sale_data["entries"]:
-            sale_history.append(
-                SaleHistory(
-                    sold_at=datetime.fromtimestamp(sale["timestamp"]),
-                    quantity=sale["quantity"],
-                    price_per_unit=sale["pricePerUnit"],
-                    total_price=sale["pricePerUnit"] * sale["quantity"],
-                    buyer_name=sale["buyerName"],
-                    world_name=sale["worldName"],
-                    world_id=sale["worldID"],
+        items = resp["items"].values() if "items" in resp else [resp]
+        for item in items:
+            sale_history = []
+            for sale in item["entries"]:
+                sale_history.append(
+                    SaleHistory(
+                        sold_at=datetime.fromtimestamp(sale["timestamp"]),
+                        quantity=sale["quantity"],
+                        price_per_unit=sale["pricePerUnit"],
+                        total_price=sale["pricePerUnit"] * sale["quantity"],
+                        buyer_name=sale["buyerName"],
+                        world_name=sale["worldName"],
+                        world_id=sale["worldID"],
+                    )
                 )
-            )
 
-        return sale_history
+            results[item["itemID"]] = sale_history
+
+        return results
 
     @overload
     async def get_market_data(self, item_ids: int, world_dc_region: str) -> MarketDataResults: ...
