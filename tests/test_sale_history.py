@@ -1,4 +1,5 @@
 from datetime import datetime
+from time import time
 
 import pytest
 
@@ -8,7 +9,16 @@ from xivuniversalis.client import UniversalisClient
 @pytest.mark.asyncio
 async def test_sale_history():
     client = UniversalisClient()
-    sale_history = await client.get_sale_history(7, "Crystal", limit=25)
+    now = time()
+    sale_history = await client.get_sale_history(
+        7,
+        "Crystal",
+        limit=25,
+        min_sale_price=1,
+        max_sale_price=999,
+        entries_within=432000,
+        entries_until=int(now - 86400)
+    )
 
     for sale in sale_history:
         assert sale.buyer_name

@@ -34,6 +34,7 @@ class UniversalisClient:
         *,
         listing_limit: int | None = None,
         history_limit: int | None = None,
+        entries_within: int | None = None,
         hq_only: bool = False,
     ) -> ListingResults: ...
 
@@ -45,6 +46,7 @@ class UniversalisClient:
         *,
         listing_limit: int | None = None,
         history_limit: int | None = None,
+        entries_within: int | None = None,
         hq_only: bool = False,
     ) -> list[ListingResults]: ...
 
@@ -56,6 +58,7 @@ class UniversalisClient:
         *,
         listing_limit: int | None = None,
         history_limit: int | None = None,
+        entries_within: int | None = None,
         hq_only: bool = False,
     ) -> ListingResults | dict[int, ListingResults]:
         """
@@ -68,6 +71,7 @@ class UniversalisClient:
                 return all available listings.
             history_limit (int): The maximum number of sale history entries to return. If not provided, Universalis will
                 default to 5 entries.
+            entries_within (int | None): The amount of time before now to take entries within, in seconds.
             hq_only (bool): If True, only HQ items will be returned.
 
         Returns:
@@ -80,6 +84,8 @@ class UniversalisClient:
             params["entries"] = history_limit
         if listing_limit is not None:
             params["listings"] = listing_limit
+        if entries_within is not None:
+            params["entriesWithin"] = entries_within
         if hq_only:
             params["hq"] = 1
         query_params = urllib.parse.urlencode(params)
@@ -146,6 +152,8 @@ class UniversalisClient:
         limit: int | None = None,
         min_sale_price: int | None = None,
         max_sale_price: int | None = None,
+        entries_within: int | None = None,
+        entries_until: int | None = None,
     ) -> list[SaleHistory]: ...
 
     @overload
@@ -157,6 +165,8 @@ class UniversalisClient:
         limit: int | None = None,
         min_sale_price: int | None = None,
         max_sale_price: int | None = None,
+        entries_within: int | None = None,
+        entries_until: int | None = None,
     ) -> dict[int, list[SaleHistory]]: ...
 
     @supports_multiple_ids
@@ -168,6 +178,8 @@ class UniversalisClient:
         limit: int | None = None,
         min_sale_price: int | None = None,
         max_sale_price: int | None = None,
+        entries_within: int | None = None,
+        entries_until: int | None = None,
     ) -> list[SaleHistory] | dict[int, list[SaleHistory]]:
         """
         Fetches the sale history for a given item ID or list of items ID's.
@@ -179,6 +191,10 @@ class UniversalisClient:
                 Universalis will default to 1800 results.
             min_sale_price (int | None): The minimum sale price to filter the results by.
             max_sale_price (int | None): The maximum sale price to filter the results by.
+            entries_within (int | None): The amount of time before entriesUntil or now to take entries within,
+                in seconds. If not provided, Universalis will default to 7 days.
+            entries_until (int | None): The UNIX timestamp in seconds to take entries until. If not provided,
+                Universalis will default to now.
 
         Returns:
             list[SaleHistory] | dict[int, list[SaleHistory]]: A list of SaleHistory objects if a single item ID was
@@ -192,6 +208,10 @@ class UniversalisClient:
             params["minSalePrice"] = min_sale_price
         if max_sale_price is not None:
             params["maxSalePrice"] = max_sale_price
+        if entries_within is not None:
+            params["entriesWithin"] = entries_within
+        if entries_until is not None:
+            params["entriesUntil"] = entries_until
         query_params = urllib.parse.urlencode(params)
 
         # If we have a single item ID, we need to wrap it in a list
