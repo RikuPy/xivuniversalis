@@ -16,3 +16,4 @@ async def test_datacenters():
             assert world.id
             assert world.name
             assert world.datacenter == datacenter
+            assert world in datacenter

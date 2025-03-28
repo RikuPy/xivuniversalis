@@ -41,6 +41,18 @@ class DataCenter:
 
         return False
 
+    def __contains__(self, item):
+        """
+        Adds support for "World in Datacenter" operations
+        """
+        if isinstance(item, World):
+            return item.id in self.worlds
+
+        if isinstance(item, int):
+            return item in self.worlds
+
+        return False
+
     def __str__(self):
         return self.name
 
