@@ -2,7 +2,7 @@
 line-length = 119
 
 [project]
-name = "universalis"
+name = "xivuniversalis"
 version = "0.1.0a1"
 description = "An unofficial asynchronous Python library for the Universalis API."
 requires-python = ">=3.11"
