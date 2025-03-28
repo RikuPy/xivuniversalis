@@ -25,15 +25,36 @@ class UniversalisClient:
     def __init__(self):
         self.endpoint: str = "https://universalis.app/api/v2"
 
+    @overload
     async def get_listings(
         self,
-        item_id: int,
+        item_ids: int,
+        world_dc_region: str,
+        listing_limit: int | None = None,
+        history_limit: int = 5,
+        hq_only: bool = False,
+    ) -> ListingResults: ...
+
+    @overload
+    async def get_listings(
+        self,
+        item_ids: list[int],
+        world_dc_region: str,
+        listing_limit: int | None = None,
+        history_limit: int = 5,
+        hq_only: bool = False,
+    ) -> list[ListingResults]: ...
+
+    @supports_multiple_ids
+    async def get_listings(
+        self,
+        item_ids: int | list[int],
         world_dc_region: str,
         *,
         listing_limit: int | None = None,
         history_limit: int = 5,
         hq_only: bool = False,
-    ) -> ListingResults:
+    ) -> ListingResults | list[ListingResults]:
         query_params = {"entries": history_limit}
         if listing_limit is not None:
             query_params["listings"] = listing_limit
@@ -41,52 +62,59 @@ class UniversalisClient:
             query_params["hq"] = 1
         query_params = urllib.parse.urlencode(query_params)
 
-        listings_data = await self._request(
-            f"{self.endpoint}/{world_dc_region}/{item_id}?{query_params}"
-            # f"{self.endpoint}/{world_dc_region}/{','.join(map(str, item_ids))}?{query_params}"
-        )
+        # If we have a single item ID, we need to wrap it in a list
+        results = []
+        item_ids = item_ids if isinstance(item_ids, list) else [item_ids]
+        resp = await self._request(f"{self.endpoint}/{world_dc_region}/{','.join(map(str, item_ids))}?{query_params}")
 
-        active = []
-        sale_history = []
-        for listing in listings_data["listings"]:
-            active.append(
-                Listing(
-                    listing_id=int(listing["listingID"]),
-                    updated_at=datetime.fromtimestamp(listing["lastReviewTime"]),
-                    quantity=listing["quantity"],
-                    price_per_unit=listing["pricePerUnit"],
-                    total_price=listing["total"],
-                    tax=listing["tax"],
-                    world_name=listing["worldName"],
-                    world_id=listing["worldID"],
-                    hq=listing["hq"],
-                    is_crafted=listing["isCrafted"],
-                    on_mannequin=listing["onMannequin"],
-                    retainer_id=int(listing["retainerID"]),
-                    retainer_name=listing["retainerName"],
-                    retainer_city=listing["retainerCity"],
+        # Iterate through the results
+        items = resp["items"].values() if "items" in resp else [resp]
+        for item in items:
+            active = []
+            sale_history = []
+            for listing in item["listings"]:
+                active.append(
+                    Listing(
+                        listing_id=int(listing["listingID"]),
+                        updated_at=datetime.fromtimestamp(listing["lastReviewTime"]),
+                        quantity=listing["quantity"],
+                        price_per_unit=listing["pricePerUnit"],
+                        total_price=listing["total"],
+                        tax=listing["tax"],
+                        world_name=listing["worldName"],
+                        world_id=listing["worldID"],
+                        hq=listing["hq"],
+                        is_crafted=listing["isCrafted"],
+                        on_mannequin=listing["onMannequin"],
+                        retainer_id=int(listing["retainerID"]),
+                        retainer_name=listing["retainerName"],
+                        retainer_city=listing["retainerCity"],
+                    )
+                )
+
+            for sale in item["recentHistory"]:
+                sale_history.append(
+                    SaleHistory(
+                        sold_at=datetime.fromtimestamp(sale["timestamp"]),
+                        quantity=sale["quantity"],
+                        price_per_unit=sale["pricePerUnit"],
+                        total_price=sale["total"],
+                        buyer_name=sale["buyerName"],
+                        world_name=sale["worldName"],
+                        world_id=sale["worldID"],
+                    )
+                )
+
+            results.append(
+                ListingResults(
+                    item_id=item["itemID"],
+                    last_updated=datetime.fromtimestamp(item["lastUploadTime"] / 1000),
+                    active=active,
+                    sale_history=sale_history,
                 )
             )
 
-        for sale in listings_data["recentHistory"]:
-            sale_history.append(
-                SaleHistory(
-                    sold_at=datetime.fromtimestamp(sale["timestamp"]),
-                    quantity=sale["quantity"],
-                    price_per_unit=sale["pricePerUnit"],
-                    total_price=sale["total"],
-                    buyer_name=sale["buyerName"],
-                    world_name=sale["worldName"],
-                    world_id=sale["worldID"],
-                )
-            )
-
-        return ListingResults(
-            item_id=listings_data["itemID"],
-            last_updated=datetime.fromtimestamp(listings_data["lastUploadTime"] / 1000),
-            active=active,
-            sale_history=sale_history,
-        )
+        return results
 
     async def get_sale_history(
         self,
@@ -144,66 +172,65 @@ class UniversalisClient:
             item_ids (int | list[int]): The item ID or list of item IDs to fetch market data for.
             world_dc_region (str): The world, datacenter, or region to filter the results by.
         """
+        # If we have a single item ID, we need to wrap it in a list
         results = []
         item_ids = item_ids if isinstance(item_ids, list) else [item_ids]
         resp = await self._request(f"{self.endpoint}/aggregated/{world_dc_region}/{','.join(map(str, item_ids))}")
+
+        # Iterate through the results
         for _result in resp["results"]:
-            _market_data = {}
+            market_data = {}
             # Iterate through both HQ and NQ results
             for _type in ["hq", "nq"]:
-                _field = _result[_type]["minListing"]
+                field = _result[_type]["minListing"]
                 # Items that cannot be HQ have no results
-                if not _field:
-                    _market_data[_type] = None
+                if not field:
+                    market_data[_type] = None
                     continue
                 lowest_price = LowestPrice(
-                    by_world=_field["world"]["price"] if "world" in _field else None,
-                    by_dc=_field["dc"]["price"] if "dc" in _field else None,
-                    dc_world_id=_field["dc"]["worldId"] if "dc" in _field else None,
-                    by_region=_field["region"]["price"],
-                    region_world_id=_field["region"]["worldId"],
+                    by_world=field["world"]["price"] if "world" in field else None,
+                    by_dc=field["dc"]["price"] if "dc" in field else None,
+                    dc_world_id=field["dc"]["worldId"] if "dc" in field else None,
+                    by_region=field["region"]["price"],
+                    region_world_id=field["region"]["worldId"],
                 )
 
-                _field = _result[_type]["averageSalePrice"]
+                field = _result[_type]["averageSalePrice"]
                 average_price = AverageSalePrice(
-                    by_world=_field["world"]["price"] if "world" in _field else None,
-                    by_dc=_field["dc"]["price"] if "dc" in _field else None,
-                    by_region=_field["region"]["price"],
+                    by_world=field["world"]["price"] if "world" in field else None,
+                    by_dc=field["dc"]["price"] if "dc" in field else None,
+                    by_region=field["region"]["price"],
                 )
 
-                _field = _result[_type]["recentPurchase"]
+                field = _result[_type]["recentPurchase"]
                 last_sale = LastSale(
-                    world_price=_field["world"]["price"] if "world" in _field else None,
-                    world_sold_at=datetime.fromtimestamp(_field["world"]["timestamp"] / 1000)
-                    if "world" in _field
+                    world_price=field["world"]["price"] if "world" in field else None,
+                    world_sold_at=datetime.fromtimestamp(field["world"]["timestamp"] / 1000)
+                    if "world" in field
                     else None,
-                    dc_price=_field["dc"]["price"] if "dc" in _field else None,
-                    dc_sold_at=datetime.fromtimestamp(_field["dc"]["timestamp"] / 1000)
-                    if "dc" in _field
-                    else None,
-                    dc_world_id=_field["dc"]["worldId"] if "dc" in _field else None,
-                    region_price=_field["region"]["price"],
-                    region_sold_at=datetime.fromtimestamp(_field["region"]["timestamp"] / 1000),
-                    region_world_id=_field["region"]["worldId"],
+                    dc_price=field["dc"]["price"] if "dc" in field else None,
+                    dc_sold_at=datetime.fromtimestamp(field["dc"]["timestamp"] / 1000) if "dc" in field else None,
+                    dc_world_id=field["dc"]["worldId"] if "dc" in field else None,
+                    region_price=field["region"]["price"],
+                    region_sold_at=datetime.fromtimestamp(field["region"]["timestamp"] / 1000),
+                    region_world_id=field["region"]["worldId"],
                 )
 
-                _field = _result[_type]["dailySaleVelocity"]
+                field = _result[_type]["dailySaleVelocity"]
                 sale_count = SaleVolume(
-                    by_world=_field["world"]["quantity"] if "world" in _field else None,
-                    by_dc=_field["dc"]["quantity"] if "dc" in _field else None,
-                    by_region=_field["region"]["quantity"],
+                    by_world=field["world"]["quantity"] if "world" in field else None,
+                    by_dc=field["dc"]["quantity"] if "dc" in field else None,
+                    by_region=field["region"]["quantity"],
                 )
 
-                _market_data[_type] = MarketData(
+                market_data[_type] = MarketData(
                     lowest_price=lowest_price,
                     average_price=average_price,
                     last_sale=last_sale,
                     sale_volume=sale_count,
                 )
 
-            results.append(
-                MarketDataResults(item_id=_result["itemId"], hq=_market_data["hq"], nq=_market_data["nq"])
-            )
+            results.append(MarketDataResults(item_id=_result["itemId"], hq=market_data["hq"], nq=market_data["nq"]))
 
         return results
 

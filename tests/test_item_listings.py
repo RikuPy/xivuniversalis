@@ -8,7 +8,7 @@ from xivuniversalis.client import UniversalisClient
 @pytest.mark.asyncio
 async def test_item_listings():
     client = UniversalisClient()
-    listings = await client.get_listings(7, "Crystal", listing_limit=50, history_limit=5)
+    listings = await client.get_listings(4, "Crystal", listing_limit=50, history_limit=5)
     for listing in listings.active:
         assert listing.updated_at
         assert isinstance(listing.updated_at, datetime)
@@ -42,3 +42,12 @@ async def test_item_listings():
         assert sale.world_name
 
     assert len(listings.sale_history) <= 5
+
+
+@pytest.mark.asyncio
+async def test_multiple_item_listings():
+    client = UniversalisClient()
+    listings = await client.get_listings([4,7], "Crystal", listing_limit=10)
+    assert len(listings) == 2
+    assert listings[0].item_id == 4
+    assert listings[1].item_id == 7
