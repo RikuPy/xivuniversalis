@@ -17,7 +17,7 @@ You can install this library using pip:
 
 Usage
 =====
-A common use-case for the universalid API is to look up listings for an item. This can be done with the ``UniversalisClient.get_listings`` method,
+A common use-case for the universalis API is to look up listings for an item. This can be done with the ``UniversalisClient.get_listings`` method,
 
 .. code:: python
 
