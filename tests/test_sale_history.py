@@ -6,7 +6,7 @@ from xivuniversalis.client import UniversalisClient
 
 
 @pytest.mark.asyncio
-async def test_item_listings():
+async def test_sale_history():
     client = UniversalisClient()
     sale_history = await client.get_sale_history(7, "Crystal", history_limit=25)
 

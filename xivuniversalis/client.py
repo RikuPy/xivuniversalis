@@ -18,6 +18,7 @@ from xivuniversalis.models import (
     AverageSalePrice,
     SaleVolume,
     MarketData,
+    ListingMeta,
 )
 
 
@@ -65,18 +66,19 @@ class UniversalisClient:
         query_params = urllib.parse.urlencode(query_params)
 
         # If we have a single item ID, we need to wrap it in a list
-        results = {}
         item_ids = item_ids if isinstance(item_ids, list) else [item_ids]
         resp = await self._request(f"{self.endpoint}/{world_dc_region}/{','.join(map(str, item_ids))}?{query_params}")
 
         # Iterate through the results
         items = resp["items"].values() if "items" in resp else [resp]
+        results = {}
         for item in items:
             active = []
             sale_history = []
             for listing in item["listings"]:
                 active.append(
                     Listing(
+                        item_id=item["itemID"],
                         listing_id=int(listing["listingID"]),
                         updated_at=datetime.fromtimestamp(listing["lastReviewTime"]),
                         quantity=listing["quantity"],
@@ -178,13 +180,13 @@ class UniversalisClient:
         query_params = urllib.parse.urlencode(query_params)
 
         # If we have a single item ID, we need to wrap it in a list
-        results = {}
         item_ids = item_ids if isinstance(item_ids, list) else [item_ids]
         resp = await self._request(
             f"{self.endpoint}/history/{world_dc_region}/{','.join(map(str, item_ids))}?{query_params}"
         )
 
         items = resp["items"].values() if "items" in resp else [resp]
+        results = {}
         for item in items:
             sale_history = []
             for sale in item["entries"]:
@@ -225,11 +227,11 @@ class UniversalisClient:
             world_dc_region (str): The world, datacenter, or region to filter the results by.
         """
         # If we have a single item ID, we need to wrap it in a list
-        results = {}
         item_ids = item_ids if isinstance(item_ids, list) else [item_ids]
         resp = await self._request(f"{self.endpoint}/aggregated/{world_dc_region}/{','.join(map(str, item_ids))}")
 
         # Iterate through the results
+        results = {}
         for result in resp["results"]:
             market_data = {}
             # Iterate through both HQ and NQ results
@@ -288,18 +290,34 @@ class UniversalisClient:
 
         return results
 
-    async def get_marketable_item_ids(self) -> list[int]:
+    async def get_recently_updated(self, world_dc_region: str) -> list[ListingMeta]:
         """
-        Fetches a list of all marketable item IDs from Universalis.
+        Fetches a list of recently updated items.
+
+        Args:
+            world_dc_region (str): The world, datacenter, or region to filter the results by.
 
         Returns:
-            list[int]: A list of marketable item IDs.
+            list[ListingMeta]: A list of ListingMeta objects containing item ID, last upload time, world ID, and world name.
 
         Raises:
             UniversalisServerError: Universalis returned a server error or an invalid json response.
             UniversalisError: Universalis returned an unexpected error.
         """
-        return await self._request(f"{self.endpoint}/marketable")
+        # Technically this endpoint has a split "world" and "dcName" parameter, but the API appears
+        # to accept a world, dc, or even region in the world parameter without issue.
+        query_params = urllib.parse.urlencode({"world": world_dc_region})
+        resp = await self._request(f"{self.endpoint}/extra/stats/most-recently-updated?{query_params}")
+        results = []
+        for item in resp["items"]:
+            results.append(ListingMeta(
+                item_id=item["itemID"],
+                updated_at=datetime.fromtimestamp(item["lastUploadTime"] / 1000),
+                world_id=item["worldID"],
+                world_name=item["worldName"],
+            ))
+
+        return results
 
     async def get_tax_rates(self, world: str) -> dict[str, int]:
         """
@@ -373,6 +391,19 @@ class UniversalisClient:
             worlds.append(World(id=_world["id"], name=_world["name"]))
 
         return worlds
+
+    async def get_marketable_item_ids(self) -> list[int]:
+        """
+        Fetches a list of all marketable item IDs from Universalis.
+
+        Returns:
+            list[int]: A list of marketable item IDs.
+
+        Raises:
+            UniversalisServerError: Universalis returned a server error or an invalid json response.
+            UniversalisError: Universalis returned an unexpected error.
+        """
+        return await self._request(f"{self.endpoint}/marketable")
 
     async def _request(self, url: str) -> dict | list:
         async with aiohttp.request("GET", url) as response:

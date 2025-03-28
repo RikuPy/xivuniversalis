@@ -3,7 +3,7 @@ import pytest
 
 
 @pytest.mark.asyncio
-async def test_worlds():
+async def test_marketable():
     client = UniversalisClient()
     marketable_items = await client.get_marketable_item_ids()
     assert marketable_items

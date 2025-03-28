@@ -3,7 +3,7 @@ import pytest
 
 
 @pytest.mark.asyncio
-async def test_worlds():
+async def test_tax_rates():
     client = UniversalisClient()
     tax_rates = await client.get_tax_rates("Mateus")
     for city, tax_rate in tax_rates.items():

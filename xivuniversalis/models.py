@@ -60,15 +60,20 @@ class World:
 
 
 @dataclass(kw_only=True, slots=True)
-class Listing:
-    listing_id: int
+class ListingMeta:
+    item_id: int
     updated_at: datetime
+    world_id: int
+    world_name: str
+
+
+@dataclass(kw_only=True, slots=True)
+class Listing(ListingMeta):
+    listing_id: int
     quantity: int
     price_per_unit: int
     total_price: int
     tax: int
-    world_id: int
-    world_name: str
     # creator_name: str  # todo: I don't believe either of these return values anymore, review to be sure
     # creator_id: int
     hq: bool
