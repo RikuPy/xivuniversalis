@@ -288,6 +288,19 @@ class UniversalisClient:
 
         return results
 
+    async def get_marketable_item_ids(self) -> list[int]:
+        """
+        Fetches a list of all marketable item IDs from Universalis.
+
+        Returns:
+            list[int]: A list of marketable item IDs.
+
+        Raises:
+            UniversalisServerError: Universalis returned a server error or an invalid json response.
+            UniversalisError: Universalis returned an unexpected error.
+        """
+        return await self._request(f"{self.endpoint}/marketable")
+
     async def get_tax_rates(self, world: str) -> dict[str, int]:
         """
         Fetches the tax rates for the specified world.
@@ -361,7 +374,7 @@ class UniversalisClient:
 
         return worlds
 
-    async def _request(self, url: str) -> dict:
+    async def _request(self, url: str) -> dict | list:
         async with aiohttp.request("GET", url) as response:
             try:
                 match response.status:
