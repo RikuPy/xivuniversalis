@@ -1,7 +1,7 @@
 Overview
 ========
 
-xivuniversalis is an asynchronous Python library for the `Universalis REST API <https://docs.universalis.app/>`__.
+xivuniversalis is an unofficial asynchronous Python library for the `Universalis REST API <https://docs.universalis.app/>`__.
 
 Important
 =========
@@ -25,7 +25,7 @@ A common use-case for the universalid API is to look up listings for an item. Th
     from xivuniversalis import UniversalisClient
 
     client = UniversalisClient()
-    results = asyncio.run(client.get_listings(4, "north-america"))
+    results = asyncio.run(client.get_listings(4, "crystal"))
     print(f"Found {len(results.active_listings)} listings")
     for listing in results.active_listings:
         print(f"[{listing.world_name}] {listing.quantity}x{listing.price_per_unit}/each ({listing.total_price} gil total)")
@@ -42,7 +42,7 @@ You can also use the ``UniversalisClient.get_market_data`` method to find the ch
     from xivuniversalis import UniversalisClient
 
     client = UniversalisClient()
-    market_data = asyncio.run(client.get_market_data(12056, "mateus"))
+    market_data = asyncio.run(client.get_market_data(12056, "north-america"))
     print(f"[{market_data.nq.lowest_price.dc_world_id}] Found listing for {market_data.nq.lowest_price.by_dc} gil")
     print(f"Average listing price is {market_data.nq.average_price.by_region} gil")
 

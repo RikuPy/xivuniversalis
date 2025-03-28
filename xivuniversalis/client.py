@@ -35,10 +35,10 @@ class UniversalisClient:
             from xivuniversalis import UniversalisClient
 
             client = UniversalisClient()
-            results = asyncio.run(client.get_listings(4, "mateus"))
-            print(f"Found {len(results)} listings")
-            for listing in results:
-                print(f"[{listing.world_name}] {listing.quantity}x{listing.price_per_unit}/each ({listing.total_price} gil)")
+            results = asyncio.run(client.get_listings(4, "crystal"))
+            print(f"Found {len(results.active_listings)} listings")
+            for listing in results.active_listings:
+                print(f"[{listing.world_name}] {listing.quantity}x{listing.price_per_unit}/each ({listing.total_price} gil total)")
     """
 
     def __init__(self):
@@ -48,7 +48,7 @@ class UniversalisClient:
     async def get_listings(
         self,
         item_ids: int,
-        world_dc_region: str,
+        server: str,
         *,
         listing_limit: int | None = None,
         history_limit: int | None = None,
@@ -60,7 +60,7 @@ class UniversalisClient:
     async def get_listings(
         self,
         item_ids: list[int],
-        world_dc_region: str,
+        server: str,
         *,
         listing_limit: int | None = None,
         history_limit: int | None = None,
@@ -72,7 +72,7 @@ class UniversalisClient:
     async def get_listings(
         self,
         item_ids: int | list[int],
-        world_dc_region: str,
+        server: str,
         *,
         listing_limit: int | None = None,
         history_limit: int | None = None,
@@ -84,7 +84,7 @@ class UniversalisClient:
 
         Args:
             item_ids (int | list[int]): The item ID or list of item IDs to fetch listings for.
-            world_dc_region (str): The world, datacenter, or region to filter the results by.
+            server (str): The world, datacenter, or region to filter the results by.
             listing_limit (int | None): The maximum number of listings to return. If not provided, Universalis will
                 return all available listings.
             history_limit (int): The maximum number of sale history entries to return. If not provided, Universalis will
@@ -93,9 +93,9 @@ class UniversalisClient:
             hq_only (bool): If True, only HQ items will be returned.
 
         Returns:
-            ListingResults | dict[int, ListingResults]: A ListingResults object if a single item ID was provided,
-                or a dictionary containing item ID's as keys and ListingResults objects as values if a list of item IDs
-                was provided.
+            ListingResults | dict[int, ListingResults]: A ListingResults object if a single item ID was provided.
+                If a list of item ID's was provided, returns a dictionary containing item ID's as keys and
+                ListingResults objects as values.
 
         Raises:
             InvalidWorldError: The specified world, datacenter, or region does not exist.
@@ -115,7 +115,7 @@ class UniversalisClient:
 
         # If we have a single item ID, we need to wrap it in a list
         item_ids = item_ids if isinstance(item_ids, list) else [item_ids]
-        resp = await self._request(f"{self.endpoint}/{world_dc_region}/{','.join(map(str, item_ids))}?{query_params}")
+        resp = await self._request(f"{self.endpoint}/{server}/{','.join(map(str, item_ids))}?{query_params}")
 
         # Iterate through the results
         items = resp["items"].values() if "items" in resp else [resp]
@@ -170,7 +170,7 @@ class UniversalisClient:
     async def get_sale_history(
         self,
         item_ids: int,
-        world_dc_region: str,
+        server: str,
         *,
         limit: int | None = None,
         min_sale_price: int | None = None,
@@ -183,7 +183,7 @@ class UniversalisClient:
     async def get_sale_history(
         self,
         item_ids: list[int],
-        world_dc_region: str,
+        server: str,
         *,
         limit: int | None = None,
         min_sale_price: int | None = None,
@@ -196,7 +196,7 @@ class UniversalisClient:
     async def get_sale_history(
         self,
         item_ids: int | list[int],
-        world_dc_region: str,
+        server: str,
         *,
         limit: int | None = None,
         min_sale_price: int | None = None,
@@ -209,20 +209,20 @@ class UniversalisClient:
 
         Args:
             item_ids (int | list[int]): The item ID or list of item IDs to fetch sale history for.
-            world_dc_region (str): The world, datacenter, or region to filter the results by.
+            server (str): The world, datacenter, or region to filter the results by.
             limit (int | None): The maximum number of sale history entries to return. If not provided,
                 Universalis will default to 1800 results.
             min_sale_price (int | None): The minimum sale price to filter the results by.
             max_sale_price (int | None): The maximum sale price to filter the results by.
-            entries_within (int | None): The amount of time before entriesUntil or now to take entries within,
+            entries_within (int | None): The amount of time before entries_until or now to take entries within,
                 in seconds. If not provided, Universalis will default to 7 days.
             entries_until (int | None): The UNIX timestamp in seconds to take entries until. If not provided,
                 Universalis will default to now.
 
         Returns:
-            list[SaleHistory] | dict[int, list[SaleHistory]]: A list of SaleHistory objects if a single item ID was
-                provided, or a dictionary containing item ID's as keys and lists of SaleHistory objects as values if
-                a list of item IDs was provided.
+            list[SaleHistory] | dict[int, list[SaleHistory]]: A list of SaleHistory objects if a single item ID was provided.
+                If a list of item ID’s was provided, returns a dictionary containing item ID's as keys and lists of
+                SaleHistory objects as values.
 
         Raises:
             InvalidWorldError: The specified world, datacenter, or region does not exist.
@@ -245,7 +245,7 @@ class UniversalisClient:
         # If we have a single item ID, we need to wrap it in a list
         item_ids = item_ids if isinstance(item_ids, list) else [item_ids]
         resp = await self._request(
-            f"{self.endpoint}/history/{world_dc_region}/{','.join(map(str, item_ids))}?{query_params}"
+            f"{self.endpoint}/history/{server}/{','.join(map(str, item_ids))}?{query_params}"
         )
 
         items = resp["items"].values() if "items" in resp else [resp]
@@ -270,14 +270,14 @@ class UniversalisClient:
         return results
 
     @overload
-    async def get_market_data(self, item_ids: int, world_dc_region: str) -> MarketDataResults: ...
+    async def get_market_data(self, item_ids: int, server: str) -> MarketDataResults: ...
 
     @overload
-    async def get_market_data(self, item_ids: list[int], world_dc_region: str) -> dict[int, MarketDataResults]: ...
+    async def get_market_data(self, item_ids: list[int], server: str) -> dict[int, MarketDataResults]: ...
 
     @supports_multiple_ids
     async def get_market_data(
-        self, item_ids: int | list[int], world_dc_region: str
+        self, item_ids: int | list[int], server: str
     ) -> MarketDataResults | dict[int, MarketDataResults]:
         """
         Fetches market data for a given item ID or list of items ID's.
@@ -287,12 +287,12 @@ class UniversalisClient:
 
         Args:
             item_ids (int | list[int]): The item ID or list of up to 100 item IDs to fetch market data for.
-            world_dc_region (str): The world, datacenter, or region to filter the results by.
+            server (str): The world, datacenter, or region to filter the results by.
 
         Returns:
-            MarketDataResults | dict[int, MarketDataResults]: A MarketDataResults object if a single item ID was
-                provided, or a dictionary containing item ID's as keys and MarketDataResults objects as values if
-                a list of item IDs was provided.
+            MarketDataResults | dict[int, MarketDataResults]: A MarketDataResults object if a single item ID was provided.
+                If a list of item ID's was provided, returns a dictionary containing item ID's as keys and
+                MarketDataResults objects as values.
 
         Raises:
             InvalidWorldError: The specified world, datacenter, or region does not exist.
@@ -301,7 +301,7 @@ class UniversalisClient:
         """
         # If we have a single item ID, we need to wrap it in a list
         item_ids = item_ids if isinstance(item_ids, list) else [item_ids]
-        resp = await self._request(f"{self.endpoint}/aggregated/{world_dc_region}/{','.join(map(str, item_ids))}")
+        resp = await self._request(f"{self.endpoint}/aggregated/{server}/{','.join(map(str, item_ids))}")
 
         # Iterate through the results
         results = {}
@@ -363,17 +363,17 @@ class UniversalisClient:
 
         return results
 
-    async def get_recently_updated(self, world_dc_region: str, limit: int = None) -> list[ListingMeta]:
+    async def get_recently_updated(self, server: str, limit: int = None) -> list[ListingMeta]:
         """
         Fetches a list of recently updated items.
 
         Args:
-            world_dc_region (str): The world, datacenter, or region to filter the results by.
+            server (str): The world, datacenter, or region to filter the results by.
             limit (int | None): The maximum number of results to return. Supports a maximum of 200. If not provided,
                 Universalis will default to 50.
 
         Returns:
-            list[ListingMeta]: A list of ListingMeta objects containing item ID, last upload time, world ID, and world name.
+            list[ListingMeta]: A list of ListingMeta objects containing basic listing metadata.
 
         Raises:
             InvalidServerError: The specified world, datacenter, or region does not exist.
@@ -382,7 +382,7 @@ class UniversalisClient:
         """
         # Technically this endpoint has a split "world" and "dcName" parameter, but the API appears
         # to accept a world, dc, or even region in the world parameter without issue.
-        params = {"world": world_dc_region}
+        params = {"world": server}
         if limit is not None:
             params["limit"] = limit
         query_params = urllib.parse.urlencode(params)
@@ -421,7 +421,7 @@ class UniversalisClient:
         """
         Fetches a list of all datacenters and their worlds from Universalis.
 
-        If you just need a list of worlds, the `worlds` method will be more efficient.
+        If you just need a list of worlds, the :meth:`~xivuniversalis.client.UniversalisClient.get_worlds` method will be more efficient.
 
         Returns:
             list[DataCenter]: A list of DataCenter objects.
