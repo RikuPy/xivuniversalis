@@ -288,6 +288,23 @@ class UniversalisClient:
 
         return results
 
+    async def get_tax_rates(self, world: str) -> dict[str, int]:
+        """
+        Fetches the tax rates for the specified world.
+
+        Args:
+            world (str): The name of the world to fetch tax rates for.
+
+        Returns:
+            dict[str, int]: A dictionary containing cities as keys and their associated tax rates as values.
+
+        Raises:
+            UniversalisServerError: Universalis returned a server error or an invalid json response.
+            UniversalisError: Universalis returned an unexpected error.
+        """
+        query_params = urllib.parse.urlencode({"world": world})
+        return await self._request(f"{self.endpoint}/tax-rates?{query_params}")
+
     async def get_datacenters(self) -> list[DataCenter]:
         """
         Fetches a list of all datacenters and their worlds from Universalis.
