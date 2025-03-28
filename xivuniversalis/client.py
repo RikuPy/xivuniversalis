@@ -1,10 +1,24 @@
 import urllib.parse
 from datetime import datetime
+from typing import overload
 
 import aiohttp
 
+from xivuniversalis.decorators import supports_multiple_ids
 from xivuniversalis.errors import UniversalisServerError, UniversalisError
-from xivuniversalis.models import DataCenter, World, Listing, SaleHistory, ListingResults
+from xivuniversalis.models import (
+    DataCenter,
+    World,
+    Listing,
+    SaleHistory,
+    ListingResults,
+    MarketDataResults,
+    LowestPrice,
+    LastSale,
+    AverageSalePrice,
+    SaleVolume,
+    MarketData,
+)
 
 
 class UniversalisClient:
@@ -109,6 +123,89 @@ class UniversalisClient:
             )
 
         return sale_history
+
+    @overload
+    async def get_market_data(self, item_ids: int, world_dc_region: str) -> MarketDataResults: ...
+
+    @overload
+    async def get_market_data(self, item_ids: list[int], world_dc_region: str) -> list[MarketDataResults]: ...
+
+    @supports_multiple_ids
+    async def get_market_data(
+        self, item_ids: int | list[int], world_dc_region: str
+    ) -> MarketDataResults | list[MarketDataResults]:
+        """
+        Fetches market data for a given item ID or list of items ID's.
+        Returns data on the lowest price, average sale price, last sale, and sale volume.
+        Results can be filtered by world, datacenter, or region. If filtered by world, you will also receive data
+        for the datacenter and region. Similarly, if filtered by datacenter, you will receive data for the region as well.
+
+        Args:
+            item_ids (int | list[int]): The item ID or list of item IDs to fetch market data for.
+            world_dc_region (str): The world, datacenter, or region to filter the results by.
+        """
+        results = []
+        item_ids = item_ids if isinstance(item_ids, list) else [item_ids]
+        resp = await self._request(f"{self.endpoint}/aggregated/{world_dc_region}/{','.join(map(str, item_ids))}")
+        for _result in resp["results"]:
+            _market_data = {}
+            # Iterate through both HQ and NQ results
+            for _type in ["hq", "nq"]:
+                _field = _result[_type]["minListing"]
+                # Items that cannot be HQ have no results
+                if not _field:
+                    _market_data[_type] = None
+                    continue
+                lowest_price = LowestPrice(
+                    by_world=_field["world"]["price"] if "world" in _field else None,
+                    by_dc=_field["dc"]["price"] if "dc" in _field else None,
+                    dc_world_id=_field["dc"]["worldId"] if "dc" in _field else None,
+                    by_region=_field["region"]["price"],
+                    region_world_id=_field["region"]["worldId"],
+                )
+
+                _field = _result[_type]["averageSalePrice"]
+                average_price = AverageSalePrice(
+                    by_world=_field["world"]["price"] if "world" in _field else None,
+                    by_dc=_field["dc"]["price"] if "dc" in _field else None,
+                    by_region=_field["region"]["price"],
+                )
+
+                _field = _result[_type]["recentPurchase"]
+                last_sale = LastSale(
+                    world_price=_field["world"]["price"] if "world" in _field else None,
+                    world_sold_at=datetime.fromtimestamp(_field["world"]["timestamp"] / 1000)
+                    if "world" in _field
+                    else None,
+                    dc_price=_field["dc"]["price"] if "dc" in _field else None,
+                    dc_sold_at=datetime.fromtimestamp(_field["dc"]["timestamp"] / 1000)
+                    if "dc" in _field
+                    else None,
+                    dc_world_id=_field["dc"]["worldId"] if "dc" in _field else None,
+                    region_price=_field["region"]["price"],
+                    region_sold_at=datetime.fromtimestamp(_field["region"]["timestamp"] / 1000),
+                    region_world_id=_field["region"]["worldId"],
+                )
+
+                _field = _result[_type]["dailySaleVelocity"]
+                sale_count = SaleVolume(
+                    by_world=_field["world"]["quantity"] if "world" in _field else None,
+                    by_dc=_field["dc"]["quantity"] if "dc" in _field else None,
+                    by_region=_field["region"]["quantity"],
+                )
+
+                _market_data[_type] = MarketData(
+                    lowest_price=lowest_price,
+                    average_price=average_price,
+                    last_sale=last_sale,
+                    sale_volume=sale_count,
+                )
+
+            results.append(
+                MarketDataResults(item_id=_result["itemId"], hq=_market_data["hq"], nq=_market_data["nq"])
+            )
+
+        return results
 
     async def get_datacenters(self) -> list[DataCenter]:
         """

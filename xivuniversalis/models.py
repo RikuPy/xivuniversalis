@@ -98,3 +98,54 @@ class ListingResults:
     last_updated: datetime
     active: list[Listing]
     sale_history: list[SaleHistory]
+
+
+@dataclass(kw_only=True, slots=True)
+class LowestPrice:
+    by_world: int | None
+    by_dc: int | None
+    dc_world_id: int | None
+    by_region: int
+    region_world_id: int
+
+
+@dataclass(kw_only=True, slots=True)
+class AverageSalePrice:
+    by_world: float | None
+    by_dc: float | None
+    by_region: float
+
+
+@dataclass(kw_only=True, slots=True)
+class LastSale:
+    world_price: int | None
+    world_sold_at: datetime | None
+    dc_price: int | None
+    dc_sold_at: datetime | None
+    dc_world_id: int | None
+    region_price: int
+    region_sold_at: datetime
+    region_world_id: int
+
+
+@dataclass(kw_only=True, slots=True)
+class SaleVolume:
+    by_world: float | None
+    by_dc: float | None
+    by_region: float
+
+
+@dataclass(kw_only=True, slots=True)
+class MarketData:
+    lowest_price: LowestPrice
+    average_price: AverageSalePrice
+    last_sale: LastSale
+    sale_volume: SaleVolume
+
+
+@dataclass(kw_only=True, slots=True)
+class MarketDataResults:
+    item_id: int
+    nq: MarketData
+    hq: MarketData | None
+
