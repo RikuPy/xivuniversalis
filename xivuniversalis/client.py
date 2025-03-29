@@ -5,7 +5,7 @@ from typing import overload
 import aiohttp
 
 from xivuniversalis.decorators import supports_multiple_ids
-from xivuniversalis.errors import InvalidWorldError, InvalidParametersError, UniversalisServerError
+from xivuniversalis.errors import InvalidServerError, InvalidParametersError, UniversalisServerError
 from xivuniversalis.models import (
     DataCenter,
     World,
@@ -494,7 +494,7 @@ class UniversalisClient:
                     case 400:
                         raise InvalidParametersError("An invalid parameter was passed to the API.")
                     case 404:
-                        raise InvalidWorldError("The specified world, datacenter, or region does not exist.")
+                        raise InvalidServerError("The specified world, datacenter, or region does not exist.")
                     case 500:
                         raise UniversalisServerError("Universalis returned an internal server error.")
                     case _:

@@ -1,4 +1,4 @@
-__all__ = ["UniversalisError", "InvalidWorldError", "InvalidParametersError", "UniversalisServerError"]
+__all__ = ["UniversalisError", "InvalidServerError", "InvalidParametersError", "UniversalisServerError"]
 
 
 class UniversalisError(Exception):
@@ -7,7 +7,7 @@ class UniversalisError(Exception):
     ...
 
 
-class InvalidWorldError(UniversalisError):
+class InvalidServerError(UniversalisError):
     """Exception raised when an invalid world, datacenter or region is provided to the API."""
 
     ...

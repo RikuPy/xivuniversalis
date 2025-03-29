@@ -43,7 +43,7 @@ class DataCenter:
 
     def __contains__(self, item):
         """
-        Adds support for "World in Datacenter" operations
+        Adds support for "World in Datacenter" operations.
         """
         if isinstance(item, World):
             return item.id in self.worlds
