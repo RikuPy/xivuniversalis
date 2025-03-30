@@ -66,7 +66,7 @@ class UniversalisClient:
         history_limit: int | None = None,
         entries_within: int | None = None,
         hq_only: bool = False,
-    ) -> list[ListingResults]: ...
+    ) -> ListingResults | dict[int, ListingResults]: ...
 
     @supports_multiple_ids
     async def get_listings(
@@ -191,7 +191,7 @@ class UniversalisClient:
         max_sale_price: int | None = None,
         entries_within: int | None = None,
         entries_until: int | None = None,
-    ) -> dict[int, list[SaleHistory]]: ...
+    ) -> list[SaleHistory] | dict[int, list[SaleHistory]]: ...
 
     @supports_multiple_ids
     async def get_sale_history(
