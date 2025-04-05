@@ -8,6 +8,7 @@ XivUniversalis Documentation
    readme
    universalis
    models
+   errors
 
 Indices and tables
 ==================
