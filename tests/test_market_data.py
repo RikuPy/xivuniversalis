@@ -26,17 +26,17 @@ async def test_market_data(client: UniversalisClient):
     assert market_data.nq.average_price.by_dc > 0
     assert market_data.nq.average_price.by_world is None
 
-    assert market_data.nq.last_sale.region_price
-    assert market_data.nq.last_sale.region_price > 0
+    assert market_data.nq.last_sale.by_region
+    assert market_data.nq.last_sale.by_region > 0
     assert market_data.nq.last_sale.region_world_id
     assert market_data.nq.last_sale.region_sold_at
     assert isinstance(market_data.nq.last_sale.region_sold_at, datetime)
-    assert market_data.nq.last_sale.dc_price
-    assert market_data.nq.last_sale.dc_price > 0
+    assert market_data.nq.last_sale.by_dc
+    assert market_data.nq.last_sale.by_dc > 0
     assert market_data.nq.last_sale.dc_world_id
     assert market_data.nq.last_sale.dc_sold_at
     assert isinstance(market_data.nq.last_sale.dc_sold_at, datetime)
-    assert market_data.nq.last_sale.world_price is None
+    assert market_data.nq.last_sale.by_world is None
     assert market_data.nq.last_sale.world_sold_at is None
 
     assert market_data.nq.sale_volume

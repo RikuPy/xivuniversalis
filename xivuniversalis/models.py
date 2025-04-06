@@ -221,21 +221,21 @@ class LastSale:
     Represents the most recently recorded sale of an item.
 
     Attributes:
-        world_price (int | None): The price of the last sale in a specified world. Only available if a world filter was specified.
+        by_world (int | None): The price of the last sale in a specified world. Only available if a world filter was specified.
         world_sold_at (datetime | None): The date and time of the last sale in a specified world. Only available if a world filter was specified.
-        dc_price (int | None): The price of the last sale in a specified datacenter. Only available if a world or datacenter filter was specified.
+        by_dc (int | None): The price of the last sale in a specified datacenter. Only available if a world or datacenter filter was specified.
         dc_sold_at (datetime | None): The date and time of the last sale in a specified datacenter. Only available if a world or datacenter filter was specified.
         dc_world_id (int | None): The ID of the world where the last sale was made in a specified datacenter. Only available if a world or datacenter filter was specified.
-        region_price (int): The price of the last sale in the region.
+        by_region (int): The price of the last sale in the region.
         region_sold_at (datetime): The date and time of the last sale in the region.
         region_world_id (int): The ID of the world where the last sale was made in the region.
     """
-    world_price: int | None
+    by_world: int | None
     world_sold_at: datetime | None
-    dc_price: int | None
+    by_dc: int | None
     dc_sold_at: datetime | None
     dc_world_id: int | None
-    region_price: int
+    by_region: int
     region_sold_at: datetime
     region_world_id: int
 
