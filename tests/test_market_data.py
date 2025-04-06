@@ -5,9 +5,7 @@ import pytest
 from xivuniversalis.client import UniversalisClient
 
 
-@pytest.mark.asyncio
-async def test_market_data():
-    client = UniversalisClient()
+async def test_market_data(client: UniversalisClient):
     market_data = await client.get_market_data(4, "Crystal")
 
     assert market_data.item_id == 4

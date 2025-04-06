@@ -2,9 +2,7 @@ from xivuniversalis.client import UniversalisClient
 import pytest
 
 
-@pytest.mark.asyncio
-async def test_datacenters():
-    client = UniversalisClient()
+async def test_datacenters(client: UniversalisClient):
     datacenters = await client.get_datacenters()
     assert len(datacenters) > 0
     for datacenter in datacenters:

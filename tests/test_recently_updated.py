@@ -4,9 +4,7 @@ from xivuniversalis.client import UniversalisClient
 import pytest
 
 
-@pytest.mark.asyncio
-async def test_recently_updated():
-    client = UniversalisClient()
+async def test_recently_updated(client: UniversalisClient):
     listings = await client.get_recently_updated("Mateus")
     assert listings
     assert len(listings) > 0
