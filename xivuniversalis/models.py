@@ -114,7 +114,7 @@ class Listing(ListingMeta):
         price_per_unit (int): The price per item.
         total_price (int): The total price of the listing.
         tax (int): The tax on the listing.
-        hq (bool): Whether the item is high quality.
+        is_hq (bool): Whether the item is high quality.
         is_crafted (bool): Whether the item is crafted.
         on_mannequin (bool): Whether the item is on a mannequin.
         retainer_id (int): The retainer's unique ID.
@@ -126,7 +126,7 @@ class Listing(ListingMeta):
     price_per_unit: int
     total_price: int
     tax: int
-    hq: bool
+    is_hq: bool
     is_crafted: bool
     # materia: list = field(default_factory=list) todo
     on_mannequin: bool
@@ -146,6 +146,8 @@ class SaleHistory:
         quantity (int): The quantity of items sold.
         price_per_unit (int): The price per item.
         total_price (int): The total price of the sale.
+        is_hq (bool): Whether the item was high quality.
+        on_mannequin (bool): Whether the item was sold from a mannequin.
         buyer_name (str): The name of the buyer.
         world_id (int): The world's unique ID.
         world_name (str): The world's name.
@@ -155,6 +157,8 @@ class SaleHistory:
     quantity: int
     price_per_unit: int
     total_price: int
+    is_hq: bool
+    on_mannequin: bool
     buyer_name: str
     world_id: int
     world_name: str
