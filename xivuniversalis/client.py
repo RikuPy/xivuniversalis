@@ -136,7 +136,7 @@ class UniversalisClient:
                         tax=listing["tax"],
                         world_name=listing["worldName"],
                         world_id=listing["worldID"],
-                        hq=listing["hq"],
+                        is_hq=listing["hq"],
                         is_crafted=listing["isCrafted"],
                         on_mannequin=listing["onMannequin"],
                         retainer_id=int(listing["retainerID"]),
@@ -153,6 +153,8 @@ class UniversalisClient:
                         quantity=sale["quantity"],
                         price_per_unit=sale["pricePerUnit"],
                         total_price=sale["total"],
+                        is_hq=sale["hq"],
+                        on_mannequin=sale["onMannequin"],
                         buyer_name=sale["buyerName"],
                         world_name=sale["worldName"],
                         world_id=sale["worldID"],
@@ -261,6 +263,8 @@ class UniversalisClient:
                         quantity=sale["quantity"],
                         price_per_unit=sale["pricePerUnit"],
                         total_price=sale["pricePerUnit"] * sale["quantity"],
+                        is_hq=sale["hq"],
+                        on_mannequin=sale["onMannequin"],
                         buyer_name=sale["buyerName"],
                         world_name=sale["worldName"],
                         world_id=sale["worldID"],
@@ -366,7 +370,7 @@ class UniversalisClient:
 
         return results
 
-    async def get_recently_updated(self, server: str, limit: int = None) -> list[ListingMeta]:
+    async def get_recently_updated(self, server: str, limit: int | None = None) -> list[ListingMeta]:
         """
         Fetches a list of recently updated items.
 
@@ -387,7 +391,7 @@ class UniversalisClient:
         # to accept a world, dc, or even region in the world parameter without issue.
         params = {"world": server}
         if limit is not None:
-            params["limit"] = limit
+            params["limit"] = str(limit)
         query_params = urllib.parse.urlencode(params)
 
         async with aiohttp.ClientSession(self.base_url) as session:

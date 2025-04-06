@@ -13,7 +13,7 @@ async def test_item_listings(client: UniversalisClient):
     for listing in listings.active_listings:
         assert listing.updated_at
         assert isinstance(listing.updated_at, datetime)
-        assert listing.hq is False
+        assert listing.is_hq is False
         assert listing.is_crafted is False
         assert listing.listing_id
         assert isinstance(listing.listing_id, int)
@@ -38,6 +38,8 @@ async def test_item_listings(client: UniversalisClient):
         assert sale.sold_at
         assert isinstance(sale.sold_at, datetime)
         assert sale.total_price >= sale.price_per_unit
+        assert isinstance(sale.is_hq, bool)
+        assert isinstance(sale.on_mannequin, bool)
         assert sale.world_id
         assert isinstance(sale.world_id, int)
         assert sale.world_name

@@ -27,6 +27,8 @@ async def test_sale_history(client: UniversalisClient):
         assert sale.sold_at
         assert isinstance(sale.sold_at, datetime)
         assert sale.total_price >= sale.price_per_unit
+        assert isinstance(sale.is_hq, bool)
+        assert isinstance(sale.on_mannequin, bool)
         assert sale.world_id
         assert isinstance(sale.world_id, int)
         assert sale.world_name
