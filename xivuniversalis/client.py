@@ -5,20 +5,20 @@ from typing import overload
 import aiohttp
 
 from xivuniversalis.decorators import supports_multiple_ids
-from xivuniversalis.errors import InvalidServerError, InvalidParametersError, UniversalisServerError
+from xivuniversalis.errors import InvalidParametersError, InvalidServerError, UniversalisServerError
 from xivuniversalis.models import (
-    DataCenter,
-    World,
-    Listing,
-    SaleHistory,
-    ListingResults,
-    MarketDataResults,
-    LowestPrice,
-    LastSale,
     AverageSalePrice,
-    SaleVolume,
-    MarketData,
+    DataCenter,
+    LastSale,
+    Listing,
     ListingMeta,
+    ListingResults,
+    LowestPrice,
+    MarketData,
+    MarketDataResults,
+    SaleHistory,
+    SaleVolume,
+    World,
 )
 
 __all__ = ["UniversalisClient"]
@@ -42,7 +42,7 @@ class UniversalisClient:
     """
 
     def __init__(self):
-        self.base_url: str = "https://universalis.app/api/v2"
+        self.base_url: str = "https://universalis.app/api/v2/"
 
     @overload
     async def get_listings(
@@ -115,10 +115,11 @@ class UniversalisClient:
 
         # If we have a single item ID, we need to wrap it in a list
         item_ids = item_ids if isinstance(item_ids, list) else [item_ids]
-        resp = await self._request(f"{self.base_url}/{server}/{','.join(map(str, item_ids))}?{query_params}")
+        async with aiohttp.ClientSession(self.base_url) as session:
+            response = await self._request(session, f"{server}/{','.join(map(str, item_ids))}?{query_params}")
 
         # Iterate through the results
-        items = resp["items"].values() if "items" in resp else [resp]
+        items = response["items"].values() if "items" in response else [response]
         results = {}
         for item in items:
             active = []
@@ -245,11 +246,10 @@ class UniversalisClient:
 
         # If we have a single item ID, we need to wrap it in a list
         item_ids = item_ids if isinstance(item_ids, list) else [item_ids]
-        resp = await self._request(
-            f"{self.base_url}/history/{server}/{','.join(map(str, item_ids))}?{query_params}"
-        )
+        async with aiohttp.ClientSession(self.base_url) as session:
+            response = await self._request(session, f"history/{server}/{','.join(map(str, item_ids))}?{query_params}")
 
-        items = resp["items"].values() if "items" in resp else [resp]
+        items = response["items"].values() if "items" in response else [response]
         results = {}
         for item in items:
             sale_history = []
@@ -303,11 +303,12 @@ class UniversalisClient:
         """
         # If we have a single item ID, we need to wrap it in a list
         item_ids = item_ids if isinstance(item_ids, list) else [item_ids]
-        resp = await self._request(f"{self.base_url}/aggregated/{server}/{','.join(map(str, item_ids))}")
+        async with aiohttp.ClientSession(self.base_url) as session:
+            response = await self._request(session, f"aggregated/{server}/{','.join(map(str, item_ids))}")
 
         # Iterate through the results
         results = {}
-        for result in resp["results"]:
+        for result in response["results"]:
             market_data = {}
             # Iterate through both HQ and NQ results
             for type_ in ["hq", "nq"]:
@@ -388,9 +389,12 @@ class UniversalisClient:
         if limit is not None:
             params["limit"] = limit
         query_params = urllib.parse.urlencode(params)
-        resp = await self._request(f"{self.base_url}/extra/stats/most-recently-updated?{query_params}")
+
+        async with aiohttp.ClientSession(self.base_url) as session:
+            response = await self._request(session, f"extra/stats/most-recently-updated?{query_params}")
+
         results = []
-        for item in resp["items"]:
+        for item in response["items"]:
             results.append(
                 ListingMeta(
                     item_id=item["itemID"],
@@ -417,7 +421,8 @@ class UniversalisClient:
             UniversalisServerError: Universalis returned a server error or an invalid json response.
         """
         query_params = urllib.parse.urlencode({"world": world})
-        return await self._request(f"{self.base_url}/tax-rates?{query_params}")
+        async with aiohttp.ClientSession(self.base_url) as session:
+            return await self._request(session, f"tax-rates?{query_params}")
 
     async def get_datacenters(self) -> list[DataCenter]:
         """
@@ -431,18 +436,19 @@ class UniversalisClient:
         Raises:
             UniversalisServerError: Universalis returned a server error or an invalid json response.
         """
-        dc_resp = await self._request(f"{self.base_url}/data-centers")
-        world_resp = await self._request(f"{self.base_url}/worlds")
+        async with aiohttp.ClientSession(self.base_url) as session:
+            dc_response = await self._request(session, "data-centers")
+            world_response = await self._request(session, "worlds")
 
         # We'll add in the datacenters later
         worlds = {}
-        for _world in world_resp:
+        for _world in world_response:
             # noinspection PyTypeChecker
             worlds[_world["id"]] = World(id=_world["id"], name=_world["name"], datacenter=None)
 
         # Build our DataCenter objects
         datacenters = []
-        for _datacenter in dc_resp:
+        for _datacenter in dc_response:
             dc_worlds = {world_id: worlds[world_id] for world_id in _datacenter["worlds"] if world_id in worlds}
             datacenters.append(DataCenter(name=_datacenter["name"], region=_datacenter["region"], worlds=dc_worlds))
 
@@ -465,11 +471,12 @@ class UniversalisClient:
         Raises:
             UniversalisServerError: Universalis returned a server error or an invalid json response.
         """
-        world_resp = await self._request(f"{self.base_url}/worlds")
+        async with aiohttp.ClientSession(self.base_url) as session:
+            response = await self._request(session, "worlds")
 
         worlds = {}
-        for _world in world_resp:
-            worlds[_world["id"]] = World(id=_world["id"], name=_world["name"])
+        for world in response:
+            worlds[world["id"]] = World(id=world["id"], name=world["name"])
 
         return worlds
 
@@ -483,10 +490,11 @@ class UniversalisClient:
         Raises:
             UniversalisServerError: Universalis returned a server error or an invalid json response.
         """
-        return await self._request(f"{self.base_url}/marketable")
+        async with aiohttp.ClientSession(self.base_url) as session:
+            return await self._request(session, "marketable")
 
-    async def _request(self, url: str) -> dict | list:
-        async with aiohttp.request("GET", url) as response:
+    async def _request(self, session: aiohttp.ClientSession, url: str) -> dict | list:
+        async with session.get(url) as response:
             try:
                 match response.status:
                     case 200:
