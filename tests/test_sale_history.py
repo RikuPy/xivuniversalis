@@ -6,9 +6,7 @@ import pytest
 from xivuniversalis.client import UniversalisClient
 
 
-@pytest.mark.asyncio
-async def test_sale_history():
-    client = UniversalisClient()
+async def test_sale_history(client: UniversalisClient):
     now = time()
     sale_history = await client.get_sale_history(
         7,

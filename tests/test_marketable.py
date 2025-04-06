@@ -2,9 +2,7 @@ from xivuniversalis.client import UniversalisClient
 import pytest
 
 
-@pytest.mark.asyncio
-async def test_marketable():
-    client = UniversalisClient()
+async def test_marketable(client: UniversalisClient):
     marketable_items = await client.get_marketable_item_ids()
     assert marketable_items
     assert isinstance(marketable_items, list)
