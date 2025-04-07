@@ -267,7 +267,7 @@ class UniversalisClient:
                         on_mannequin=sale["onMannequin"],
                         buyer_name=sale["buyerName"],
                         world_name=sale.get("worldName"),
-                        world_id=sale.get("worldID")
+                        world_id=sale.get("worldID"),
                     )
                 )
 
@@ -325,15 +325,15 @@ class UniversalisClient:
                     by_world=field["world"]["price"] if "world" in field else None,
                     by_dc=field["dc"]["price"] if "dc" in field else None,
                     dc_world_id=field["dc"]["worldId"] if "dc" in field else None,
-                    by_region=field["region"]["price"],
-                    region_world_id=field["region"]["worldId"],
+                    by_region=field["region"]["price"] if "region" in field else None,
+                    region_world_id=field["region"]["worldId"] if "region" in field else None,
                 )
 
                 field = result[type_]["averageSalePrice"]
                 average_price = AverageSalePrice(
                     by_world=field["world"]["price"] if "world" in field else None,
                     by_dc=field["dc"]["price"] if "dc" in field else None,
-                    by_region=field["region"]["price"],
+                    by_region=field["region"]["price"] if "region" in field else None,
                 )
 
                 field = result[type_]["recentPurchase"]
@@ -346,15 +346,17 @@ class UniversalisClient:
                     dc_sold_at=datetime.fromtimestamp(field["dc"]["timestamp"] / 1000) if "dc" in field else None,
                     dc_world_id=field["dc"]["worldId"] if "dc" in field else None,
                     by_region=field["region"]["price"],
-                    region_sold_at=datetime.fromtimestamp(field["region"]["timestamp"] / 1000),
-                    region_world_id=field["region"]["worldId"],
+                    region_sold_at=datetime.fromtimestamp(field["region"]["timestamp"] / 1000)
+                    if "region" in field
+                    else None,
+                    region_world_id=field["region"]["worldId"] if "region" in field else None,
                 )
 
                 field = result[type_]["dailySaleVelocity"]
                 sale_count = SaleVolume(
                     by_world=field["world"]["quantity"] if "world" in field else None,
                     by_dc=field["dc"]["quantity"] if "dc" in field else None,
-                    by_region=field["region"]["quantity"],
+                    by_region=field["region"]["quantity"] if "region" in field else None,
                 )
 
                 market_data[type_] = MarketData(

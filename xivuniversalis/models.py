@@ -190,14 +190,14 @@ class LowestPrice:
         by_world (int | None): The lowest price for a specified world. Only available if a world filter was specified.
         by_dc (int | None): The lowest price for a specified datacenter. Only available if a world or datacenter filter was specified.
         dc_world_id (int | None): The ID of the world where the lowest listing price was found. Only available if a world or datacenter filter was specified.
-        by_region (int): The lowest price for the entire region.
-        region_world_id (int): The ID of the world where the lowest listing price in the region was found.
+        by_region (int | None): The lowest price for the entire region.
+        region_world_id (int | None): The ID of the world where the lowest listing price in the region was found.
     """
     by_world: int | None
     by_dc: int | None
     dc_world_id: int | None
-    by_region: int
-    region_world_id: int
+    by_region: int | None
+    region_world_id: int | None
 
 
 @dataclass(kw_only=True, slots=True)
@@ -208,11 +208,11 @@ class AverageSalePrice:
     Attributes:
         by_world (float | None): The average sale price for a specified world. Only available if a world filter was specified.
         by_dc (float | None): The average sale price for a specified datacenter. Only available if a world or datacenter filter was specified.
-        by_region (float): The average sale price for the entire region.
+        by_region (float | None): The average sale price for the entire region.
     """
     by_world: float | None
     by_dc: float | None
-    by_region: float
+    by_region: float | None
 
 
 @dataclass(kw_only=True, slots=True)
@@ -226,18 +226,18 @@ class LastSale:
         by_dc (int | None): The price of the last sale in a specified datacenter. Only available if a world or datacenter filter was specified.
         dc_sold_at (datetime | None): The date and time of the last sale in a specified datacenter. Only available if a world or datacenter filter was specified.
         dc_world_id (int | None): The ID of the world where the last sale was made in a specified datacenter. Only available if a world or datacenter filter was specified.
-        by_region (int): The price of the last sale in the region.
-        region_sold_at (datetime): The date and time of the last sale in the region.
-        region_world_id (int): The ID of the world where the last sale was made in the region.
+        by_region (int | None): The price of the last sale in the region.
+        region_sold_at (datetime | None): The date and time of the last sale in the region.
+        region_world_id (int | None): The ID of the world where the last sale was made in the region.
     """
     by_world: int | None
     world_sold_at: datetime | None
     by_dc: int | None
     dc_sold_at: datetime | None
     dc_world_id: int | None
-    by_region: int
-    region_sold_at: datetime
-    region_world_id: int
+    by_region: int | None
+    region_sold_at: datetime | None
+    region_world_id: int | None
 
 
 @dataclass(kw_only=True, slots=True)
@@ -248,11 +248,11 @@ class SaleVolume:
     Attributes:
         by_world (float | None): The sale volume for a specified world. Only available if a world filter was specified.
         by_dc (float | None): The sale volume for a specified datacenter. Only available if a world or datacenter filter was specified.
-        by_region (float): The sale volume for the entire region.
+        by_region (float | None): The sale volume for the entire region.
     """
     by_world: float | None
     by_dc: float | None
-    by_region: float
+    by_region: float | None
 
 
 @dataclass(kw_only=True, slots=True)
