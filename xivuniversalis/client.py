@@ -156,8 +156,8 @@ class UniversalisClient:
                         is_hq=sale["hq"],
                         on_mannequin=sale["onMannequin"],
                         buyer_name=sale["buyerName"],
-                        world_name=sale["worldName"],
-                        world_id=sale["worldID"],
+                        world_name=sale.get("worldName"),
+                        world_id=sale.get("worldID"),
                     )
                 )
 
@@ -266,8 +266,8 @@ class UniversalisClient:
                         is_hq=sale["hq"],
                         on_mannequin=sale["onMannequin"],
                         buyer_name=sale["buyerName"],
-                        world_name=sale["worldName"],
-                        world_id=sale["worldID"],
+                        world_name=sale.get("worldName"),
+                        world_id=sale.get("worldID")
                     )
                 )
 

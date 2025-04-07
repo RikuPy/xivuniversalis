@@ -150,7 +150,7 @@ class SaleHistory:
         on_mannequin (bool): Whether the item was sold from a mannequin.
         buyer_name (str): The name of the buyer.
         world_id (int): The world's unique ID.
-        world_name (str): The world's name.
+        world_name (str | None): The world's name.
     """
     item_id: int
     sold_at: datetime
@@ -161,7 +161,7 @@ class SaleHistory:
     on_mannequin: bool
     buyer_name: str
     world_id: int
-    world_name: str
+    world_name: str | None
 
 
 @dataclass(kw_only=True, slots=True)

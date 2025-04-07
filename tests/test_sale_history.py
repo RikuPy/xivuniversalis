@@ -36,9 +36,7 @@ async def test_sale_history(client: UniversalisClient):
     assert len(sale_history) <= 25
 
 
-@pytest.mark.asyncio
-async def test_multiple_sale_history():
-    client = UniversalisClient()
+async def test_multiple_sale_history(client: UniversalisClient):
     now = time()
     results = await client.get_sale_history(
         [4, 7],
@@ -68,3 +66,21 @@ async def test_multiple_sale_history():
             assert sale.world_name
 
         assert len(sale_history) <= 25
+
+
+async def test_world_sale_history(client: UniversalisClient):
+    results = await client.get_sale_history(7, "Mateus", limit=25)
+
+    for sale_history in results:
+        assert sale_history.item_id
+        assert sale_history.item_id == 7
+        assert sale_history.buyer_name
+        assert sale_history.price_per_unit > 0
+        assert sale_history.quantity > 0
+        assert sale_history.sold_at
+        assert isinstance(sale_history.sold_at, datetime)
+        assert sale_history.total_price >= sale_history.price_per_unit
+        assert isinstance(sale_history.is_hq, bool)
+        assert isinstance(sale_history.on_mannequin, bool)
+        assert sale_history.world_id is None
+        assert sale_history.world_name is None
