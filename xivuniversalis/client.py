@@ -134,8 +134,8 @@ class UniversalisClient:
                         price_per_unit=listing["pricePerUnit"],
                         total_price=listing["total"],
                         tax=listing["tax"],
-                        world_name=listing["worldName"],
-                        world_id=listing["worldID"],
+                        world_name=listing.get("worldName"),
+                        world_id=listing.get("worldID"),
                         is_hq=listing["hq"],
                         is_crafted=listing["isCrafted"],
                         on_mannequin=listing["onMannequin"],
@@ -156,8 +156,8 @@ class UniversalisClient:
                         is_hq=sale["hq"],
                         on_mannequin=sale["onMannequin"],
                         buyer_name=sale["buyerName"],
-                        world_name=sale["worldName"],
-                        world_id=sale["worldID"],
+                        world_name=sale.get("worldName"),
+                        world_id=sale.get("worldID"),
                     )
                 )
 
@@ -266,8 +266,8 @@ class UniversalisClient:
                         is_hq=sale["hq"],
                         on_mannequin=sale["onMannequin"],
                         buyer_name=sale["buyerName"],
-                        world_name=sale["worldName"],
-                        world_id=sale["worldID"],
+                        world_name=sale.get("worldName"),
+                        world_id=sale.get("worldID")
                     )
                 )
 
@@ -403,8 +403,8 @@ class UniversalisClient:
                 ListingMeta(
                     item_id=item["itemID"],
                     updated_at=datetime.fromtimestamp(item["lastUploadTime"] / 1000),
-                    world_id=item["worldID"],
-                    world_name=item["worldName"],
+                    world_id=item.get("worldID"),
+                    world_name=item.get("worldName"),
                 )
             )
 
