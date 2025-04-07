@@ -94,13 +94,13 @@ class ListingMeta:
     Attributes:
         item_id (int): The item's unique ID.
         updated_at (datetime): The last time the listing was updated.
-        world_id (int): The world's unique ID.
-        world_name (str): The world's name.
+        world_id (int | None): The world's unique ID. None if a world is used for the server filter.
+        world_name (str | None): The world's name. None if a world is used for the server filter.
     """
     item_id: int
     updated_at: datetime
-    world_id: int
-    world_name: str
+    world_id: int | None
+    world_name: str | None
 
 
 @dataclass(kw_only=True, slots=True)
@@ -149,8 +149,8 @@ class SaleHistory:
         is_hq (bool): Whether the item was high quality.
         on_mannequin (bool): Whether the item was sold from a mannequin.
         buyer_name (str): The name of the buyer.
-        world_id (int): The world's unique ID.
-        world_name (str | None): The world's name.
+        world_id (int | None): The world's unique ID. None if a world is used for the server filter.
+        world_name (str | None): The world's name. None if a world is used for the server filter.
     """
     item_id: int
     sold_at: datetime
@@ -160,7 +160,7 @@ class SaleHistory:
     is_hq: bool
     on_mannequin: bool
     buyer_name: str
-    world_id: int
+    world_id: int | None
     world_name: str | None
 
 

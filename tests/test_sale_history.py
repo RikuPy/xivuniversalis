@@ -68,7 +68,7 @@ async def test_multiple_sale_history(client: UniversalisClient):
         assert len(sale_history) <= 25
 
 
-async def test_world_sale_history(client: UniversalisClient):
+async def test_sale_history_using_world(client: UniversalisClient):
     results = await client.get_sale_history(7, "Mateus", limit=25)
 
     for sale_history in results:
