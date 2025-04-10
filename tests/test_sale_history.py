@@ -84,3 +84,11 @@ async def test_sale_history_using_world(client: UniversalisClient):
         assert isinstance(sale_history.on_mannequin, bool)
         assert sale_history.world_id is None
         assert sale_history.world_name is None
+
+
+async def test_list_of_one_returns_dict(client: UniversalisClient):
+    results = await client.get_sale_history([7], "Crystal", limit=25)
+
+    assert isinstance(results, dict)
+    assert len(results) == 1
+    assert results[7][0].item_id == 7
