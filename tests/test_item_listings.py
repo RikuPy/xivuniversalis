@@ -1,7 +1,5 @@
 from datetime import datetime
 
-import pytest
-
 from xivuniversalis.client import UniversalisClient
 
 
@@ -48,7 +46,7 @@ async def test_item_listings(client: UniversalisClient):
 
 
 async def test_multiple_item_listings(client: UniversalisClient):
-    listings = await client.get_listings([4,7], "Crystal", listing_limit=10)
+    listings = await client.get_listings([4, 7], "Crystal", listing_limit=10)
     assert len(listings) == 2
     assert listings[4].item_id == 4
     assert listings[7].item_id == 7
@@ -92,3 +90,10 @@ async def test_item_listings_using_world(client: UniversalisClient):
         assert sale.world_name is None
 
     assert len(listings.sale_history) <= 5
+
+
+async def test_list_of_one_returns_dict(client: UniversalisClient):
+    listings = await client.get_listings([4], "Crystal")
+    assert isinstance(listings, dict)
+    assert len(listings) == 1
+    assert listings[4].item_id == 4

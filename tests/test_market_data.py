@@ -57,3 +57,11 @@ async def test_multiple_market_data():
     assert market_data[7].item_id == 7
 
 
+async def test_list_of_one_returns_dict(client: UniversalisClient):
+    market_data = await client.get_market_data([4], "Crystal")
+
+    assert isinstance(market_data, dict)
+    assert len(market_data) == 1
+    assert market_data[4].item_id == 4
+
+
