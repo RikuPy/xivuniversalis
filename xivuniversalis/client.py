@@ -48,7 +48,7 @@ class UniversalisClient:
     async def get_listings(
         self,
         item_ids: int,
-        server: str,
+        server: str | int,
         *,
         listing_limit: int | None = None,
         history_limit: int | None = None,
@@ -60,7 +60,7 @@ class UniversalisClient:
     async def get_listings(
         self,
         item_ids: list[int],
-        server: str,
+        server: str | int,
         *,
         listing_limit: int | None = None,
         history_limit: int | None = None,
@@ -72,7 +72,7 @@ class UniversalisClient:
     async def get_listings(
         self,
         item_ids: int | list[int],
-        server: str,
+        server: str | int,
         *,
         listing_limit: int | None = None,
         history_limit: int | None = None,
@@ -84,7 +84,7 @@ class UniversalisClient:
 
         Args:
             item_ids (int | list[int]): The item ID or list of item IDs to fetch listings for.
-            server (str): The world, datacenter, or region to filter the results by.
+            server (str | int): The world, datacenter, or region to filter the results by.
             listing_limit (int | None): The maximum number of listings to return. If not provided, Universalis will
                 return all available listings.
             history_limit (int): The maximum number of sale history entries to return. If not provided, Universalis will
@@ -174,7 +174,7 @@ class UniversalisClient:
     async def get_sale_history(
         self,
         item_ids: int,
-        server: str,
+        server: str | int,
         *,
         limit: int | None = None,
         min_sale_price: int | None = None,
@@ -187,7 +187,7 @@ class UniversalisClient:
     async def get_sale_history(
         self,
         item_ids: list[int],
-        server: str,
+        server: str | int,
         *,
         limit: int | None = None,
         min_sale_price: int | None = None,
@@ -200,7 +200,7 @@ class UniversalisClient:
     async def get_sale_history(
         self,
         item_ids: int | list[int],
-        server: str,
+        server: str | int,
         *,
         limit: int | None = None,
         min_sale_price: int | None = None,
@@ -213,7 +213,7 @@ class UniversalisClient:
 
         Args:
             item_ids (int | list[int]): The item ID or list of item IDs to fetch sale history for.
-            server (str): The world, datacenter, or region to filter the results by.
+            server (str | int): The world, datacenter, or region to filter the results by.
             limit (int | None): The maximum number of sale history entries to return. If not provided,
                 Universalis will default to 1800 results.
             min_sale_price (int | None): The minimum sale price to filter the results by.
@@ -276,14 +276,14 @@ class UniversalisClient:
         return results
 
     @overload
-    async def get_market_data(self, item_ids: int, server: str) -> MarketDataResults: ...
+    async def get_market_data(self, item_ids: int, server: str | int) -> MarketDataResults: ...
 
     @overload
-    async def get_market_data(self, item_ids: list[int], server: str) -> dict[int, MarketDataResults]: ...
+    async def get_market_data(self, item_ids: list[int], server: str | int) -> dict[int, MarketDataResults]: ...
 
     @supports_multiple_ids
     async def get_market_data(
-        self, item_ids: int | list[int], server: str
+        self, item_ids: int | list[int], server: str | int
     ) -> MarketDataResults | dict[int, MarketDataResults]:
         """
         Fetches market data for a given item ID or list of items ID's.
@@ -293,7 +293,7 @@ class UniversalisClient:
 
         Args:
             item_ids (int | list[int]): The item ID or list of up to 100 item IDs to fetch market data for.
-            server (str): The world, datacenter, or region to filter the results by.
+            server (str | int): The world, datacenter, or region to filter the results by.
 
         Returns:
             MarketDataResults | dict[int, MarketDataResults]: A MarketDataResults object if a single item ID was provided.
@@ -372,12 +372,12 @@ class UniversalisClient:
 
         return results
 
-    async def get_recently_updated(self, server: str, limit: int | None = None) -> list[ListingMeta]:
+    async def get_recently_updated(self, server: str | int, limit: int | None = None) -> list[ListingMeta]:
         """
         Fetches a list of recently updated items.
 
         Args:
-            server (str): The world, datacenter, or region to filter the results by.
+            server (str | int): The world, datacenter, or region to filter the results by.
             limit (int | None): The maximum number of results to return. Supports a maximum of 200. If not provided,
                 Universalis will default to 50.
 
